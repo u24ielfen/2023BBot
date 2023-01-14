@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.MoveToTag;
 import frc.robot.commands.TeleopSwerve;
+import frc.robot.commands.autos.exampleAuto;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -29,6 +30,7 @@ public class RobotContainer {
   PhotonCamera camera = new PhotonCamera("cam");
   /* Subsystems */
   private final Swerve s_Swerve = new Swerve();
+  exampleAuto auto = new exampleAuto(s_Swerve);
   private final MoveToTag moveTo = new MoveToTag(camera, s_Swerve, s_Swerve.getPose()); 
   // Replace with CommandPS4Controller or CommandJoystick if needed
  
@@ -66,6 +68,6 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
     // return Autos.exampleAuto(m_exampleSubsystem);
-    return null;
+    return new exampleAuto(s_Swerve);
   }
 }
