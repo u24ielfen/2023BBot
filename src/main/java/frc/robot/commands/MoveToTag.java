@@ -28,7 +28,7 @@ public class MoveToTag extends CommandBase {
   private static final Transform2d TAG_TO_GOAL = new Transform2d(new Translation2d(1, 0), Rotation2d.fromDegrees(180.0));
 
   private final PhotonCamera photonCamera;
-  private final Swerve swerve;
+  private final Swerve s_Swerve;
   private final Pose2d poseProvider;
 
   private final ProfiledPIDController xController = new ProfiledPIDController(4, 0, 0, X_CONSTRAINTS);
@@ -40,10 +40,10 @@ public class MoveToTag extends CommandBase {
 
   public MoveToTag(
         PhotonCamera photonCamera, 
-        Swerve swerve,
+        Swerve s_Swerve,
         Pose2d poseProvider) {
     this.photonCamera = photonCamera;
-    this.swerve = swerve;
+    this.s_Swerve = s_Swerve;
     this.poseProvider = poseProvider;
 
     xController.setTolerance(0.1);
@@ -51,7 +51,7 @@ public class MoveToTag extends CommandBase {
     omegaController.setTolerance(Units.degreesToRadians(3));
     omegaController.enableContinuousInput(-1, 1);
 
-    addRequirements(swerve);
+    addRequirements(s_Swerve);
   }
 
   @Override
@@ -117,7 +117,7 @@ public class MoveToTag extends CommandBase {
       omegaSpeed = 0;
     }
     Translation2d movement = new Translation2d(xSpeed, ySpeed);
-    Swerve.drive(
+    s_Swerve.drive(
         movement, omegaSpeed, true);
         
   }

@@ -128,7 +128,17 @@ public class Swerve extends SubsystemBase {
         }
         return positions;
     }
-    
+    public Rotation2d getPitch(){
+        return Rotation2d.fromDegrees(gyro.getPitch());
+    }
+    public void setModuleRoation(Rotation2d rotation){
+        for(SwerveModule mod: mSwerveMods){
+            mod.setDesiredState(new SwerveModuleState(0, rotation));
+        }
+    }
+    public SwerveModule[] getModules(){
+        return mSwerveMods;
+    }
   public SwerveControllerCommand getCommand(Trajectory trajectory){
     var thetaController = new ProfiledPIDController(
       Constants.AutoConstants.kPThetaController, 0, 0, Constants.AutoConstants.kThetaControllerConstraints);

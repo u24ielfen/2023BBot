@@ -10,7 +10,9 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.AlignToRamp;
 import frc.robot.commands.MoveToTag;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.commands.autos.exampleAuto;
@@ -31,12 +33,15 @@ public class RobotContainer {
   /* Subsystems */
   private final Swerve s_Swerve = new Swerve();
   exampleAuto auto = new exampleAuto(s_Swerve);
+  AlignToRamp alignToRamp = new AlignToRamp(s_Swerve);
+  private final JoystickButton robotCentric = new JoystickButton(driver, XboxController.Button.kLeftBumper.value);
+
   private final MoveToTag moveTo = new MoveToTag(camera, s_Swerve, s_Swerve.getPose()); 
   // Replace with CommandPS4Controller or CommandJoystick if needed
  
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, driver.getLeftBumper()));
+    s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, robotCentric.getAsBoolean()));
     
     // Configure the trigger bindings
     configureBindings();
@@ -58,6 +63,7 @@ public class RobotContainer {
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
     new Trigger(driver::getBButton).whileTrue(moveTo);
+    new Trigger(driver::getRightBumper).whileTrue(alignToRamp);
   }
 
   /**
