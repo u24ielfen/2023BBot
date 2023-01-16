@@ -19,7 +19,7 @@ public class AlignToRamp extends CommandBase {
   PIDController pidController;
   public AlignToRamp(Swerve s_Swerve) {
     this.s_Swerve = s_Swerve;
-    pidController = new PIDController(0.02, 0, 0);
+    pidController = new PIDController(0.1, 0, 0);
     pidController.setTolerance(1);
     addRequirements(s_Swerve);
     // Use addRequirements() here to declare subsystem dependencies.
@@ -35,8 +35,7 @@ public class AlignToRamp extends CommandBase {
   @Override
   public void execute() {
     double translationVal = pidController.calculate(s_Swerve.getPitch().getDegrees(), 0);
-    translationVal = translationVal < 0.1 ? 0: translationVal;
-    s_Swerve.drive(new Translation2d(translationVal,0), 0.0, false);
+    s_Swerve.drive(new Translation2d(-translationVal,0).times(2), 0.0, false);
   }
 
   // Called once the command ends or is interrupted.

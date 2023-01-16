@@ -34,11 +34,12 @@ public class Swerve extends SubsystemBase {
     public SwerveDriveOdometry swerveOdometry;
     public static SwerveModule[] mSwerveMods;
     public static AHRS gyro;
-    
+    public static Field2d field2d;
     
     public Swerve() {
         gyro = new AHRS(Port.kMXP);
         zeroGyro();
+        field2d = new Field2d();
         mSwerveMods = new SwerveModule[] {
             new SwerveModule(0, Constants.Swerve.Mod0.constants),
             new SwerveModule(1, Constants.Swerve.Mod1.constants),
@@ -48,7 +49,7 @@ public class Swerve extends SubsystemBase {
         swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.kinematics, getGyro(), getModulePositions());
     }
 
-    public static void drive(Translation2d translation, double rotation, boolean fieldRelative) {
+    public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
         SwerveModuleState[] swerveModuleStates =
             Constants.Swerve.kinematics.toSwerveModuleStates(
                 fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(
@@ -105,13 +106,15 @@ public class Swerve extends SubsystemBase {
         gyro.reset();
     }
 
-    public static Rotation2d getGyro() {
+    public Rotation2d getGyro() {
         return Rotation2d.fromDegrees(360- gyro.getYaw());
     }
 
     @Override
     public void periodic(){
+        SmartDashboard.putNumber("Gyro Pitch", getPitch().getDegrees());
         swerveOdometry.update(getGyro(), getModulePositions());
+        field2d.setRobotPose(getPose());
         SmartDashboard.putNumber("Gyro", getGyro().getDegrees());
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());

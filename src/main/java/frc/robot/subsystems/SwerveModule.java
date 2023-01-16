@@ -47,7 +47,6 @@ public class SwerveModule {
 
     public void setDesiredState(SwerveModuleState desiredState){
         desiredState = CTREModuleState.optimize(desiredState, getState().angle);
-
         double percentOutput = desiredState.speedMetersPerSecond / Constants.Swerve.maxSpeed;
         mDriveMotor.set(ControlMode.PercentOutput, percentOutput);
         double angle = (Math.abs(desiredState.speedMetersPerSecond) <= (Constants.Swerve.maxSpeed * 0.01)) ? lastAngle : desiredState.angle.getDegrees(); //Prevent rotating module if speed is less then 1%. Prevents Jittering.
@@ -82,7 +81,7 @@ public class SwerveModule {
     private void configDriveMotor(){        
         mDriveMotor.configFactoryDefault();
         mDriveMotor.configAllSettings(Robot.ctreConfigs.swerveDriveFXConfig);
-        mDriveMotor.setNeutralMode(NeutralMode.Coast);
+        mDriveMotor.setNeutralMode(NeutralMode.Brake);
         mDriveMotor.setSelectedSensorPosition(0);
         if( mDriveMotor.getDeviceID() == 9 || mDriveMotor.getDeviceID() == 2 ){
             mDriveMotor.setInverted(false);

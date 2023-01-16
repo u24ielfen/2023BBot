@@ -13,6 +13,8 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.Swerve;
@@ -24,8 +26,8 @@ public class MoveToTag extends CommandBase {
   private static final TrapezoidProfile.Constraints OMEGA_CONSTRATINTS = 
       new TrapezoidProfile.Constraints(8, 8);
   
-  private static final int TAG_TO_CHASE = 8;
-  private static final Transform2d TAG_TO_GOAL = new Transform2d(new Translation2d(1, 0), Rotation2d.fromDegrees(180.0));
+  private static final int TAG_TO_CHASE = 2;
+  private static final Transform2d TAG_TO_GOAL = new Transform2d(new Translation2d(1, 0), Rotation2d.fromDegrees(180.));
 
   private final PhotonCamera photonCamera;
   private final Swerve s_Swerve;
@@ -69,57 +71,64 @@ public class MoveToTag extends CommandBase {
     var robotPose = poseProvider;
     var photonRes = photonCamera.getLatestResult();
     if (photonRes.hasTargets()) {
-      // Find the tag we want to chase
+      SmartDashboard.putBoolean("HAs", true);
       var targetOpt = photonRes.getTargets().stream()
-          .filter(t -> t.getFiducialId() == TAG_TO_CHASE)
-          .findFirst();
+      .filter(t -> t.getFiducialId() == TAG_TO_CHASE)
+      .findFirst();
       if (targetOpt.isPresent()) {
         var target = targetOpt.get();
         if (!target.equals(lastTarget)) {
-          // This is new target data, so recalculate the goal
           lastTarget = target;
-
-          // Get the transformation from the camera to the tag (in 2d)
+          
           var camToTarget = target.getBestCameraToTarget();
           var transform = new Transform2d(
             camToTarget.getTranslation().toTranslation2d(),
             camToTarget.getRotation().toRotation2d().minus(Rotation2d.fromDegrees(90)));
             
-            // Transform the robot's pose to find the tag's pose
             var cameraPose = robotPose.transformBy(Constants.CAMERA_TO_ROBOT.inverse());
             Pose2d targetPose = cameraPose.transformBy(transform);
             
-            // Transform the tag's pose to set our goal
             goalPose = targetPose.transformBy(TAG_TO_GOAL);
         }
 
         if (null != goalPose) {
-          // Drive
           xController.setGoal(goalPose.getX());
           yController.setGoal(goalPose.getY());
           omegaController.setGoal(goalPose.getRotation().getRadians());
-        }
-      }
-    }
-    
-    var xSpeed = xController.calculate(robotPose.getX());
-    if (xController.atGoal()) {
-      xSpeed = 0;
-    }
-    
-    var ySpeed = yController.calculate(robotPose.getY());
-    if (yController.atGoal()) {
-      ySpeed = 0;
-    }
-
-    var omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
-    if (omegaController.atGoal()) {
-      omegaSpeed = 0;
-    }
-    Translation2d movement = new Translation2d(xSpeed, ySpeed);
-    s_Swerve.drive(
-        movement, omegaSpeed, true);
         
+            
+        var xSpeed = xController.calculate(robotPose.getX());
+        if (xController.atGoal()) {
+          xSpeed = 0;
+        }
+        
+        var ySpeed = yController.calculate(robotPose.getY());
+        if (yController.atGoal()) {
+          ySpeed = 0;
+        }
+        
+        var omegaSpeed = omegaController.calculate(robotPose.getRotation().getRadians());
+        if (omegaController.atGoal()) {
+          omegaSpeed = 0;
+        
+        }
+        
+        SmartDashboard.putNumber("xMove", xSpeed);
+        SmartDashboard.putNumber("omeeega", xSpeed);
+        SmartDashboard.putNumber("yMove", ySpeed);
+        Translation2d movement = new Translation2d(xSpeed, -ySpeed);
+        s_Swerve.drive(
+            movement, -omegaSpeed, false);
+        
+      }
+      else{
+        
+        s_Swerve.drive(new Translation2d(0, 0), 0, false);
+        SmartDashboard.putBoolean("HAs", false);
+      }
+            
+      }
+    } 
   }
   @Override
   public void end(boolean interrupted) {

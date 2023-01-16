@@ -15,9 +15,8 @@ public final class Constants {
     public static final double stickDeadband = 0.05;
 
     public static final Transform2d CAMERA_TO_ROBOT = 
-    new Transform2d(new Translation2d(0.4, 0.07), new Rotation2d(0.0));
+    new Transform2d(new Translation2d(0.4, 0.), new Rotation2d(0.0));
     public static final class Swerve {
-        public static final boolean invertGyro = false; // Always ensure Gyro is CCW+ CW-
 
         /* Drivetrain Constants */
         public static final double trackWidth = 0.517;
