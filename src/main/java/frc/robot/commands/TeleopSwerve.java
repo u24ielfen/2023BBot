@@ -5,6 +5,9 @@ import frc.robot.subsystems.Swerve;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+
+import java.util.function.BooleanSupplier;
+
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
@@ -13,7 +16,7 @@ public class TeleopSwerve extends CommandBase {
 
     private double rotation;
     private Translation2d translation;
-    private boolean fieldRelative;
+    private BooleanSupplier fieldRelative;
     
     private Swerve s_Swerve;
     private XboxController controller;
@@ -21,7 +24,7 @@ public class TeleopSwerve extends CommandBase {
     /**
      * Driver control
      */
-    public TeleopSwerve(Swerve s_Swerve, XboxController controller, boolean fieldRelative) {
+    public TeleopSwerve(Swerve s_Swerve, XboxController controller, BooleanSupplier fieldRelative) {
         this.s_Swerve = s_Swerve;
         addRequirements(s_Swerve);
         this.fieldRelative = fieldRelative;
@@ -30,7 +33,7 @@ public class TeleopSwerve extends CommandBase {
 
     @Override
     public void execute() {
-        if(fieldRelative == true){
+        if(fieldRelative.getAsBoolean() == true){
             SmartDashboard.putBoolean("FieldRelative", true);
         }else{
             SmartDashboard.putBoolean("FieldRelative", false);
@@ -49,6 +52,6 @@ public class TeleopSwerve extends CommandBase {
         rotation = rAxis * Constants.Swerve.maxAngularVelocity;
         
         // s_Swerve.drive(translation, rotation, fieldRelative);
-        s_Swerve.drive(translation, rotation, controller.getLeftBumper());
+        s_Swerve.drive(translation.times(0.8), rotation*0.8, fieldRelative.getAsBoolean());
     }
 }

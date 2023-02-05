@@ -19,18 +19,23 @@ public class Limelight extends SubsystemBase {
   NetworkTableEntry targetY;
   NetworkTableEntry targetX;
   NetworkTableEntry targetArea;
+  NetworkTableEntry area;
 
 
   public Limelight() {
       table = NetworkTableInstance.getDefault().getTable("limelight");
       targetY = table.getEntry("ty");
       targetX = table.getEntry("tx");
+      area = table.getEntry("ta");
   }
 
   @Override
   public void periodic() {
+
     // This method will be called once per scheduler run
     SmartDashboard.putNumber("Cone Distance", getDistance(0.0));
+    table.getEntry("ledMode").setNumber(3);
+
     setLedMode(ledMode.FORCE_ON);
   }
 
@@ -54,11 +59,9 @@ public class Limelight extends SubsystemBase {
       return targetX.getDouble(0.0);
   }
 
-
-
   //Allows user to swap between on, off, and blinking LEDS
   public void setLedMode(LimelightConstants.ledMode mode){
-    table.getEntry("ledMode").setNumber(1);
+    table.getEntry("ledMode").setNumber(3);
   }
 
   //Toggle between vision processing and driver cam
@@ -70,6 +73,9 @@ public class Limelight extends SubsystemBase {
   public void setStreamMode(int mode){
     table.getEntry("stream").setNumber(mode);
   }
+  public boolean hasTarget(){
+    return area.getDouble(0.0) > 0;
+  }
 
   //Take snapshot and reset snapshot mode
   public void snapshot(int snapMode){
@@ -80,6 +86,4 @@ public class Limelight extends SubsystemBase {
   public void setPipeline(int pipeline){
     table.getEntry("pipeline").setNumber(pipeline);
   }
-
-
 }

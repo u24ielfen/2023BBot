@@ -9,13 +9,18 @@ import org.photonvision.PhotonCamera;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.commands.AlignToRamp;
+import frc.robot.commands.AlignWithNode;
 import frc.robot.commands.MoveToTag;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.commands.autos.exampleAuto;
+// import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Swerve;
 
 /**
@@ -27,21 +32,18 @@ import frc.robot.subsystems.Swerve;
 public class RobotContainer {
   
   // The robot's subsystems and commands are defined here...
-  private final XboxController driver = new XboxController(1);
-  /* Driver Buttons */
-  PhotonCamera camera = new PhotonCamera("cam");
-  /* Subsystems */
   private final Swerve s_Swerve = new Swerve();
+  private final XboxController driver = new XboxController(1);
+  PhotonCamera camera = new PhotonCamera("cam");
   exampleAuto auto = new exampleAuto(s_Swerve);
   AlignToRamp alignToRamp = new AlignToRamp(s_Swerve);
-  private final JoystickButton robotCentric = new JoystickButton(driver, XboxController.Button.kLeftBumper.value);
-
-  private final MoveToTag moveTo = new MoveToTag(camera, s_Swerve, s_Swerve.getPose()); 
-  // Replace with CommandPS4Controller or CommandJoystick if needed
- 
+  Limelight limelight = new Limelight();
+  AlignWithNode alignNode = new AlignWithNode(limelight, s_Swerve);
+  MoveToTag moveTo = new MoveToTag(camera, s_Swerve, s_Swerve.getPose()); 
+  // Intake intake = new Intake();
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, robotCentric.getAsBoolean()));
+    s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, () -> driver.getLeftBumper()));
     
     // Configure the trigger bindings
     configureBindings();
@@ -64,6 +66,8 @@ public class RobotContainer {
     // cancelling on release.
     new Trigger(driver::getBButton).whileTrue(moveTo);
     new Trigger(driver::getRightBumper).whileTrue(alignToRamp);
+    new Trigger(driver::getLeftBumper).whileTrue(alignNode);
+    new Trigger(driver::getYButton).whileTrue(new InstantCommand(() -> moveTo.changePipeline()));
   }
 
   /**

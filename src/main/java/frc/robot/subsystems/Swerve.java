@@ -1,6 +1,17 @@
 package frc.robot.subsystems;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import javax.xml.validation.SchemaFactory;
+
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.RobotPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import com.kauailabs.navx.frc.AHRS;
 import com.kauailabs.navx.frc.AHRS.SerialDataType;
@@ -11,15 +22,22 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.I2C;
 import edu.wpi.first.wpilibj.SerialPort;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -31,12 +49,26 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 
 public class Swerve extends SubsystemBase {
-    public SwerveDriveOdometry swerveOdometry;
     public static SwerveModule[] mSwerveMods;
     public static AHRS gyro;
     public static Field2d field2d;
     
+    //Odometry & Pose Estimation
+    public SwerveDriveOdometry swerveOdometry;
+    public static SwerveDrivePoseEstimator m_PoseEstimator;
+    public static PhotonPoseEstimator aprilTagPoseEstimator;
+    
+    public static AprilTagFieldLayout layout;
+    
+    
     public Swerve() {
+        
+        try {
+            layout = AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         gyro = new AHRS(Port.kMXP);
         zeroGyro();
         field2d = new Field2d();
@@ -46,7 +78,19 @@ public class Swerve extends SubsystemBase {
             new SwerveModule(2, Constants.Swerve.Mod2.constants),
             new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
+        //Odometry
         swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.kinematics, getGyro(), getModulePositions());
+        //Pose Estimation
+        m_PoseEstimator = new SwerveDrivePoseEstimator(Constants.Swerve.kinematics, getGyro(), getModulePositions(), new Pose2d(), Constants.VisionConstants.STATE_STD_DEVS, Constants.VisionConstants.VISION_MEASUREMENT_STD_DEVS);
+        
+        
+        //AprilTag pose estimator
+        aprilTagPoseEstimator = new PhotonPoseEstimator(layout, Constants.VisionConstants.APRILTAG_POSE_STRATEGY, Constants.VisionConstants.APRILTAG_CAM, Constants.VisionConstants.APRILTAG_CAM_POS);
+        
+        List<Pair<PhotonCamera, Transform3d>> camList = new ArrayList<Pair<PhotonCamera, Transform3d>>();
+        camList.add(new Pair<PhotonCamera, Transform3d>(Constants.VisionConstants.APRILTAG_CAM, Constants.VisionConstants.APRILTAG_CAM_POS));
+        
+
     }
 
     public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
@@ -68,8 +112,8 @@ public class Swerve extends SubsystemBase {
         for(SwerveModule mod : mSwerveMods){
             mod.setDesiredState(swerveModuleStates[mod.moduleNumber]);
         }
-    }    
-
+    }   
+    
     public void resetWithController(){
         for(SwerveModule mod: mSwerveMods){
             mod.resetWithController();
@@ -86,8 +130,28 @@ public class Swerve extends SubsystemBase {
         return swerveOdometry.getPoseMeters();
     }
 
+    public Pose2d getEstimatedPose(){
+        return m_PoseEstimator.getEstimatedPosition();
+    }
+
+    public void resetToVision() {
+
+        //TODO this is probably wrong (Optional<Pair<Pose2d, Double>>)
+        Optional<EstimatedRobotPose> aprilTagEstimation = getApriltagEstimatedPose(getEstimatedPose());
+        if (aprilTagEstimation.isPresent()) {
+            swerveOdometry.resetPosition(getGyro(), getModulePositions(), aprilTagEstimation.get().estimatedPose.toPose2d());
+            m_PoseEstimator.resetPosition(getGyro(), getModulePositions(), aprilTagEstimation.get().estimatedPose.toPose2d());
+        }
+    }
+    
+    public Optional<EstimatedRobotPose> getApriltagEstimatedPose(Pose2d prevEstimatedRobotPose) {
+        aprilTagPoseEstimator.setReferencePose(prevEstimatedRobotPose);
+        return aprilTagPoseEstimator.update();
+    }
+    
     public void resetOdometry(Pose2d pose) {
         swerveOdometry.resetPosition(getGyro(), getModulePositions(), pose);
+        m_PoseEstimator.resetPosition(getGyro(), getModulePositions(), pose);
     }
     public Command resetFieldPos(){
         return new SequentialCommandGroup(new InstantCommand(() -> zeroGyro()).andThen(new InstantCommand(
@@ -112,9 +176,22 @@ public class Swerve extends SubsystemBase {
 
     @Override
     public void periodic(){
-        SmartDashboard.putNumber("Gyro Pitch", getPitch().getDegrees());
         swerveOdometry.update(getGyro(), getModulePositions());
-        field2d.setRobotPose(getPose());
+        m_PoseEstimator.update(getGyro(), getModulePositions());
+        double currentTime = Timer.getFPGATimestamp();
+
+        aprilTagPoseEstimator.setReferencePose(getEstimatedPose());
+        Optional<EstimatedRobotPose> result = getApriltagEstimatedPose(m_PoseEstimator.getEstimatedPosition());
+
+        if(result.isPresent()){
+            EstimatedRobotPose camPose = result.get();
+            m_PoseEstimator.addVisionMeasurement(camPose.estimatedPose.toPose2d(), camPose.timestampSeconds);
+            //TODO: Add field2d & else statement
+            field2d.getObject("AprilTag").setPose(camPose.estimatedPose.toPose2d());
+        }
+
+        SmartDashboard.putNumber("Gyro Pitch", getPitch().getDegrees());
+        field2d.setRobotPose(getEstimatedPose());
         SmartDashboard.putNumber("Gyro", getGyro().getDegrees());
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());

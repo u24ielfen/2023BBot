@@ -1,11 +1,28 @@
 package frc.robot;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 
+import edu.wpi.first.apriltag.AprilTag;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
@@ -152,10 +169,86 @@ public final class Constants {
                 .setKinematics(Constants.Swerve.kinematics);
 
       }
-      public static final class Limelight{
-          public static final double targetDistance = 34.0;
-          public static final double limeLightHeight = 34.0; 
-          public static final double mountingAngle = 0;
+      public static final class Vision{
+
       }
 
+      public static final class Elevator{
+
+          public static final int PIVOT_MOTORID = 30;
+          public static final int ELEVATOR_GEARING = 100;
+          public static final int EXTENDING_MOTORID = 40;
+          public static final int PIVOT_GEARING = 100;
+          public static final double[] ELEVATOR_PID = {1, 0, 0};
+
+          public static final double TICKS_TO_TOP = 100;
+          public static final double TICKS_TO_MID = 50;
+          public static final double TICKS_TO_BOTTOM = 20;
+        }
+
+      public static final class Intake{
+
+          public static final int leftIntakeMotorID = 0;
+          public static final int rightIntakeMotorID = 0;
+          public static final double intakeOpen = 0;
+          public static final double intakeClose = 0;
+        }
+        
+    public static class FieldConstants {
+        public static final double length = Units.feetToMeters(54);
+        public static final double width = Units.feetToMeters(27);
+    }
+
+    public static class VisionConstants {
+        public static final Transform3d APRILTAG_CAM_POS = new Transform3d(new Translation3d(0.27, 0.13, 0),
+        new Rotation3d(0, -Math.toRadians(20), 0)); // TODO OPI pos
+        public static final PhotonCamera APRILTAG_CAM = new PhotonCamera("Cam1");
+        public static final PoseStrategy APRILTAG_POSE_STRATEGY = PoseStrategy.LOWEST_AMBIGUITY;
+        /*
+        * Increase numbers to trust your model's state estimates less. This matrix is in the form [x, y, theta]ᵀ, with units in
+        * meters and radians.
+        */
+        public static final Matrix<N3, N1> STATE_STD_DEVS = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.10, 0.10, 0.10);
+
+        public static final Matrix<N3, N1> VISION_MEASUREMENT_STD_DEVS = new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.90, 0.90, 0.90);
+        
+        public static final class ConeCubeCamera{
+            public static final double mountHeight = 0.3625; 
+            public static final double mountingAngle = 4.26;
+    
+            public static final double coneLongAreaConstant = 10.5165;
+            public static final double coneShortAreaConstant = 7.5;
+        
+        }
+            
+        public static final class Limelight{
+            public static final double limeLightHeight = 0.3575; 
+            public static final double mountingAngle = -2.31;
+            public static final double verticalConeArea = 2.464;
+        
+            public static final class ledMode{
+            public static final int defaultMode = 0;
+            public static final int forceOff = 1;
+            public static final int forceBlink = 2;
+            public static final int forceOn = 3;
+        }
+        
+        public static final class camMode{
+            public static final int visionProccesing = 0;
+            public static final int driverCamera = 1;
+                }
+        
+        public static final class stream{
+            public static final int standard = 0;
+            public static final int main = 1;
+            public static final int secondary = 1;
+                }
+                
+        public static final class snapshot{
+          public static final int reset = 0;
+          public static final int take = 1;
+                }
+            }
+
+    }
 }

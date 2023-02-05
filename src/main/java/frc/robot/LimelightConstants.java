@@ -10,7 +10,10 @@ import edu.wpi.first.wpilibj.drive.RobotDriveBase.MotorType;
 public class LimelightConstants {
     public static final double limelightMountAngle = -2.31;
     public static final double limelightMountHeight = 0.3575;
-
+    public static final double midConeHeight = 0.87;
+    public static final double highConeHeight = 1.17;
+    public static final double alignedConeX = 0;
+    public static final double setPointDisY = 0.58;
 
 
     public enum ledMode{
