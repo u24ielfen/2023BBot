@@ -6,22 +6,33 @@ package frc.robot;
 
 import org.photonvision.PhotonCamera;
 
+
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import static edu.wpi.first.wpilibj2.command.Commands.runOnce;
+
+import java.util.HashMap;
+
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.AutoConstants;
 import frc.robot.commands.AlignToRamp;
 import frc.robot.commands.AlignWithNode;
 import frc.robot.commands.MoveToTag;
 import frc.robot.commands.TeleopSwerve;
-import frc.robot.commands.autos.exampleAuto;
+// import frc.robot.commands.autos.exampleAuto;
 // import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.poseEstimator;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -30,54 +41,38 @@ import frc.robot.subsystems.Swerve;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
-  
-  // The robot's subsystems and commands are defined here...
-  private final Swerve s_Swerve = new Swerve();
   private final XboxController driver = new XboxController(1);
-  PhotonCamera camera = new PhotonCamera("cam");
-  exampleAuto auto = new exampleAuto(s_Swerve);
-  AlignToRamp alignToRamp = new AlignToRamp(s_Swerve);
-  Limelight limelight = new Limelight();
-  AlignWithNode alignNode = new AlignWithNode(limelight, s_Swerve);
-  MoveToTag moveTo = new MoveToTag(camera, s_Swerve, s_Swerve.getPose()); 
-  // Intake intake = new Intake();
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  
+  private final PhotonCamera camera = new PhotonCamera("cam");
+  private final Swerve s_Swerve = new Swerve();
+  private final poseEstimator estimator = new poseEstimator(camera, s_Swerve);
+
+  private final MoveToTag moveTo = new MoveToTag(camera, s_Swerve, estimator::getCurrentPose);
+
+  // private final exampleAuto auto = new exampleAuto(s_Swerve);
+  private final AlignToRamp alignToRamp = new AlignToRamp(s_Swerve);
+  private final Limelight limelight = new Limelight();
+  private final AlignWithNode alignNode = new AlignWithNode(limelight, s_Swerve);
+  private final Vision m_Vision = new Vision(camera);
+  
   public RobotContainer() {
+
     s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, () -> driver.getLeftBumper()));
     
-    // Configure the trigger bindings
     configureBindings();
   }
 
-  /**
-   * Use this method to define your trigger->command mappings. Triggers can be created via the
-   * {@link Trigger#Trigger(java.util.function.BooleanSupplier)} constructor with an arbitrary
-   * predicate, or via the named factories in {@link
-   * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
-   * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
-   * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
-   */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
     
-    new Trigger(driver::getAButton).onTrue(s_Swerve.resetFieldPos());
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
-    new Trigger(driver::getBButton).whileTrue(moveTo);
+    new Trigger(driver::getAButton).onTrue(runOnce(estimator::resetFieldPosition));
+
     new Trigger(driver::getRightBumper).whileTrue(alignToRamp);
     new Trigger(driver::getLeftBumper).whileTrue(alignNode);
-    new Trigger(driver::getYButton).whileTrue(new InstantCommand(() -> moveTo.changePipeline()));
   }
 
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
   public Command getAutonomousCommand() {
-    // An example command will be run in autonomous
-    // return Autos.exampleAuto(m_exampleSubsystem);
-    return new exampleAuto(s_Swerve);
+    
+return null;
+    // return autoBuilder.fullAuto(testPath);
   }
 }

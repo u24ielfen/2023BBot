@@ -24,7 +24,6 @@ public class Intake extends SubsystemBase {
     CLOSED
   }
   public state currentState;
-
   public Intake() {
     intakeMotor.restoreFactoryDefaults();
     intakeMotor.setInverted(false);
@@ -36,6 +35,11 @@ public class Intake extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
   }
+  
+  public void zeroIntake(){
+      intakeEncoder.setPosition(0);
+  }
+
   public void openIntake(){
     intakePID.setSetpoint(Constants.Intake.OPEN_POSITION);
     intakeMotor.set(intakePID.calculate(intakeEncoder.getPosition()));
@@ -57,4 +61,9 @@ public class Intake extends SubsystemBase {
   public state getState(){
     return currentState;
   } 
+
+  public void stopIntakeMotor(){
+    intakeMotor.set(0);
+
+  }
 }

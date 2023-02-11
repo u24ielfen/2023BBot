@@ -16,30 +16,52 @@ import frc.robot.subsystems.TelescopicArm;
 
 public class Elevator extends CommandBase {
   /** Creates a new Elevator. */
-  TelescopicArm m_Arm;
+  static TelescopicArm m_Arm;
   
-  Intake m_Intake;
+  static Intake m_Intake;
+  private static Elevator instance;
   public Elevator(TelescopicArm m_Arm, Intake m_Intake) {
     this.m_Arm = m_Arm;
     this.m_Intake = m_Intake;
     addRequirements(m_Arm, m_Intake);
     // Use addRequirements() here to declare subsystem dependencies.
   }
-  public Command CloseIntake(){
-    return new InstantCommand(() -> m_Intake.closeIntake());
+  public void CloseIntake(){
+    if(m_Intake.getState().toString().equals("OPEN")){
+      m_Intake.closeIntake();
+    }
+    else{
+      m_Intake.stopIntakeMotor();
+    }
   }
 
-  public Command OpenIntake(){
-    return new InstantCommand(() -> m_Intake.openIntake());
-
+  public void OpenIntake(){
+    if(m_Intake.getState().toString().equals("CLOSED")){
+      m_Intake.openIntake();
+    }
+    else{
+      m_Intake.stopIntakeMotor();
+    }
   }
 
-  public Command alignToIntake(){
-    return new SequentialCommandGroup(OpenIntake(), /*thing for aligning */ CloseIntake());
+  public void alignToIntake(){
   }
-  public Command topScore(){
-    
-    m_Arm.moveMotor(Constants.Elevator.TICKS_TO_TOP);
+  // public void topScore(){
+  //   if(m_Arm.getWinchState().toString().equals())
+  //   m_Arm.(Constants.Elevator.TICKS_TO_TOP);
+
+  public void midScore(){
+    // m_Arm.extendRetractArm(Constants.Elevator.TICKS_TO_MID);
+  }
+
+  
+  public void lowScore(){
+    // m_Arm.extendRetractArm(Constants.Elevator.TICKS_TO_BOTTOM);
+  }
+
+  public void turn180Degrees(){
+    // m_Arm.extendRetractArm(0);
+    // m_Arm.turn180Degrees();
   }
 
   // Called when the command is initially scheduled.
@@ -58,5 +80,13 @@ public class Elevator extends CommandBase {
   @Override
   public boolean isFinished() {
     return false;
+  }
+  public static Elevator getInstance(){
+    if(instance == null){
+
+      return new Elevator(m_Arm, m_Intake);
+    }
+    return null;
+    // return null;
   }
 }

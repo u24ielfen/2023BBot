@@ -73,7 +73,7 @@ public class SwerveModule {
     private void configAngleMotor(){
         mAngleMotor.configFactoryDefault();
         mAngleMotor.configAllSettings(Robot.ctreConfigs.swerveAngleFXConfig);
-        mAngleMotor.setInverted(Constants.Swerve.angleMotorInvert);
+        mAngleMotor.setInverted(false);
         mAngleMotor.setNeutralMode(NeutralMode.Coast);
         resetToAbsolute();
     }
@@ -83,11 +83,15 @@ public class SwerveModule {
         mDriveMotor.configAllSettings(Robot.ctreConfigs.swerveDriveFXConfig);
         mDriveMotor.setNeutralMode(NeutralMode.Brake);
         mDriveMotor.setSelectedSensorPosition(0);
-        if( mDriveMotor.getDeviceID() == 9 || mDriveMotor.getDeviceID() == 2 ){
-            mDriveMotor.setInverted(false);
-        }else{
+        if( mDriveMotor.getDeviceID() == 4 || mDriveMotor.getDeviceID() == 2){
             mDriveMotor.setInverted(true);
         }
+        else{
+            mDriveMotor.setInverted(false);
+        }
+        // else{
+        //     mDriveMotor.setInverted(true);
+        // }
     }
 
     public Rotation2d getCanCoder(){

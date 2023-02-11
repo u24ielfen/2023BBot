@@ -38,19 +38,24 @@ public class Vision extends SubsystemBase {
       this.coneCubeCamera = coneCubeCamera;
   }
 
+  public PhotonCamera getCamera(){
+    return coneCubeCamera;
+  }
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     var result = coneCubeCamera.getLatestResult();
     SmartDashboard.putNumber("Cone Distance", cubeConeDistance(0.0, result));
-    checkConeOrientation(cubeConeDistance(0,result), result);
     heightToWidthRation(result.getBestTarget());
+    checkConeOrientation(cubeConeDistance(0,result), result);
   }
 
   //Calculates Pitch to bottom edge
   public double absoluteBottomeEdgePitch(PhotonPipelineResult result){
-    List<TargetCorner> corners = result.getBestTarget().getDetectedCorners();
-    double lowestPoint[] = {0,0};
+    if(result != null){
+
+      List<TargetCorner> corners = result.getBestTarget().getDetectedCorners();
+      double lowestPoint[] = {0,0};
     for(TargetCorner corner : corners){
       if(corner.y >= lowestPoint[0]){
         lowestPoint[1] = lowestPoint[0];
@@ -62,42 +67,51 @@ public class Vision extends SubsystemBase {
     }
 
     double y = lowestPoint[0] + lowestPoint[1];
-
-
+    
+    
     y/=2;
-
+    
     y-=120;
     y*=-1;
-
+    
     SmartDashboard.putNumber("Y", y);
     y = y/120 * 0.3727;
     return Math.asin(y) * 180 / Math.PI;
   }
+  else{
+    return 0;
+  }
+  }
 
   public double heightToWidthRation(PhotonTrackedTarget target){
-    List<TargetCorner> corners = target.getDetectedCorners();
+    if(target != null){
 
-    double wdx = Math.pow(corners.get(1).x - corners.get(2).x, 2);
-    double wdy = Math.pow(corners.get(1).y - corners.get(2).y, 2);
-    double hdx = Math.pow(corners.get(1).x - corners.get(0).x, 2);
-    double hdy = Math.pow(corners.get(1).y - corners.get(0).y, 2);
-
-    double xarr[] = {0,0,0,0};
-    double yarr[] = {0,0,0,0};
-    for(int i = 0; i < 4; i++){
-      xarr[i] = corners.get(i).x;
-      yarr[i] = corners.get(i).y;
-
+      List<TargetCorner> corners = target.getDetectedCorners();
+      
+          double wdx = Math.pow(corners.get(1).x - corners.get(2).x, 2);
+          double wdy = Math.pow(corners.get(1).y - corners.get(2).y, 2);
+          double hdx = Math.pow(corners.get(1).x - corners.get(0).x, 2);
+          double hdy = Math.pow(corners.get(1).y - corners.get(0).y, 2);
+      
+          double xarr[] = {0,0,0,0};
+          double yarr[] = {0,0,0,0};
+          for(int i = 0; i < 4; i++){
+            xarr[i] = corners.get(i).x;
+            yarr[i] = corners.get(i).y;
+      
+          }
+          SmartDashboard.putNumberArray("Xarr", xarr);
+          SmartDashboard.putNumberArray("Yarr", yarr);
+      
+          double width = Math.sqrt(wdx + wdy);
+          double height = Math.sqrt(hdx + hdy);
+      
+          SmartDashboard.putNumber("WtoH", width/height);
+          return height/width;
     }
-    SmartDashboard.putNumberArray("Xarr", xarr);
-    SmartDashboard.putNumberArray("Yarr", yarr);
-
-    double width = Math.sqrt(wdx + wdy);
-    double height = Math.sqrt(hdx + hdy);
-
-    SmartDashboard.putNumber("WtoH", width/height);
-    
-    return height/width;
+    else{
+      return 0;
+    }
   }
 
   public double cubeConeDistance(double targetHeight, PhotonPipelineResult result){
@@ -142,12 +156,16 @@ public class Vision extends SubsystemBase {
 
   //Calculate theoretical area of a cone based on distance --> need to tune constant for this
   public void checkConeOrientation(double distance, PhotonPipelineResult result){
-    PhotonTrackedTarget target = result.getBestTarget();
-    double vertConeError = Math.abs(VisionConstants.ConeCubeCamera.coneLongAreaConstant/Math.pow(distance, 2) - target.getArea());
-    double baseConeError = Math.abs(VisionConstants.ConeCubeCamera.coneShortAreaConstant/Math.pow(distance, 2) - target.getArea());
-    
-    if(vertConeError <= baseConeError){
-      if(Math.abs(target.getPitch() - absoluteBottomeEdgePitch(result)) < 1.5){
+    if(result != null){
+
+      PhotonTrackedTarget target = result.getBestTarget();
+      if(target != null){
+
+        double vertConeError = Math.abs(VisionConstants.ConeCubeCamera.coneLongAreaConstant/Math.pow(distance, 2) - target.getArea());
+        double baseConeError = Math.abs(VisionConstants.ConeCubeCamera.coneShortAreaConstant/Math.pow(distance, 2) - target.getArea());
+        
+        if(vertConeError <= baseConeError){
+          if(Math.abs(target.getPitch() - absoluteBottomeEdgePitch(result)) < 1.5){
           SmartDashboard.putString("Cone orientation", "Horizontal");
       }else{
         SmartDashboard.putString("Cone orientation", "Upright");
@@ -155,7 +173,9 @@ public class Vision extends SubsystemBase {
     }else{
       SmartDashboard.putString("Cone orientation", "Nose or base first");
     }
+  }
 
+  }
 
   }
 

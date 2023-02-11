@@ -4,17 +4,12 @@
 
 package frc.robot.subsystems;
 
-import com.revrobotics.CANPIDController;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.PIDSubsystem;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -27,10 +22,31 @@ public class TelescopicArm extends SubsystemBase {
   RelativeEncoder winchEncoder;
 
   PIDController winchPidController;
+  PIDController pivotPidController;
+  
+  boolean atWinchSetpoint = false;
+  boolean atPivotSetpoint = false;
 
-  public enum states{}
+  boolean isInverted = false;
 
+  public enum winchPosition{
+    CLOSED,
+    LOW,
+    MID,
+    HIGH
+  }
+
+  public enum pivotPosition{
+    LOW,
+    MID,
+    HIGH
+  }
+
+  winchPosition winchPos;
+  pivotPosition pivotPos;
+  
   public TelescopicArm() {
+    winchPos = winchPosition.CLOSED;
     //Extend Motor Setup
     winchMotor.setInverted(false);
     winchMotor.restoreFactoryDefaults();
@@ -47,9 +63,18 @@ public class TelescopicArm extends SubsystemBase {
     pivotEncoder = pivotMotor.getEncoder();
     pivotEncoder.setPosition(0);
 
-    winchPidController.setP(Constants.Elevator.ELEVATOR_PID[0]);
-    winchPidController.setI(Constants.Elevator.ELEVATOR_PID[1]);
-    winchPidController.setD(Constants.Elevator.ELEVATOR_PID[2]);
+    //Winch PID
+    winchPidController.setP(Constants.Elevator.WINCH_PID[0]);
+    winchPidController.setI(Constants.Elevator.WINCH_PID[1]);
+    winchPidController.setD(Constants.Elevator.WINCH_PID[2]);
+    winchPidController.setTolerance(10);
+
+    //PIVOT PID
+    pivotPidController.setP(Constants.Elevator.PIVOT_PID[0]);
+    pivotPidController.setI(Constants.Elevator.PIVOT_PID[1]);
+    pivotPidController.setD(Constants.Elevator.PIVOT_PID[2]);
+    pivotPidController.setTolerance(10);
+
   }
   
   @Override
@@ -57,10 +82,101 @@ public class TelescopicArm extends SubsystemBase {
     // This method will be called once per scheduler run
   }
 
-  public void moveMotor(double setPoint){
+  
+  public void zeroWinch(){
+    winchEncoder.setPosition(0);
+  }
+  
+  public void zeroPivot(){
+    pivotEncoder.setPosition(0);
+  }
+  
+  //Functions for ease
+  public void zeroTelescopicArm(){
+    zeroWinch();
+    zeroPivot();
+  }
+  
+  public void closeWinch(){
+    setWinchPosition(0);
+  }
+
+  public void setWinchLow(){
+    setWinchPosition(Constants.Elevator.WINCH_TICKS_TO_BOTTOM);
+  }
+
+  public void setWinchMid(){
+    setWinchPosition(Constants.Elevator.WINCH_TICKS_TO_MID);
+  }
+  public void setWinchHigh(){
+    setWinchPosition(Constants.Elevator.WINCH_TICKS_TO_TOP);
+  }
+
+  public void setPivotLow(){
+    setPivotPosition(Constants.Elevator.PIVOT_TICKS_TO_BOTTOM);
+  }
+
+  public void setPivotMid(){
+    setPivotPosition(Constants.Elevator.PIVOT_TICKS_TO_MID);
+  }
+  
+  public void setPivotHigh(){
+    setPivotPosition(Constants.Elevator.PIVOT_TICKS_TO_TOP);
+  }
+
+  public void setWinchPosition(double setPoint){
     winchPidController.setSetpoint(setPoint);
     double speed = winchPidController.calculate(winchEncoder.getPosition());
     winchMotor.set(speed);
+    if(winchPidController.atSetpoint()){
+      atWinchSetpoint = true;
+      winchMotor.set(0);
+    }
+    else atWinchSetpoint = false;
+    
+    if(setPoint == Constants.Elevator.WINCH_TICKS_TO_BOTTOM){
+      winchPos = winchPosition.LOW;
+    }
+    else if(setPoint == Constants.Elevator.WINCH_TICKS_TO_MID){
+      winchPos = winchPosition.MID;
+    }
+    else if(setPoint == Constants.Elevator.WINCH_TICKS_TO_TOP){
+      winchPos = winchPosition.HIGH;
+    }
+    else if(setPoint == 0){
+      winchPos = winchPosition.CLOSED;
+    }
+  }
+
+  public void setPivotPosition(double setPoint){
+    pivotPidController.setSetpoint(setPoint);
+    double speed = pivotPidController.calculate(pivotEncoder.getPosition());
+    pivotMotor.set(speed);
+    if(pivotPidController.atSetpoint()){
+      atPivotSetpoint = true;
+      pivotMotor.set(0);
+    }
+    
+    if(setPoint == Constants.Elevator.PIVOT_TICKS_TO_BOTTOM){
+      pivotPos = pivotPosition.LOW;
+    }
+    else if(setPoint == Constants.Elevator.PIVOT_TICKS_TO_MID){
+      pivotPos = pivotPosition.MID;
+    }
+    else if(setPoint == Constants.Elevator.PIVOT_TICKS_TO_TOP){
+      pivotPos = pivotPosition.HIGH;
+    }
+    
   }
   
+  // public void turnWinch180Degrees(){
+  //   pivotPidController.setSetpoint(pivotEncoder.getPosition() + 180);
+  //   double speed = pivotPidController.calculate(pivotEncoder.getPosition());
+  //   pivotMotor.set(speed);
+  //   if(pivotPidController.atSetpoint()){
+  //     atPivotSetpoint = true;
+  //     pivotMotor.set(0);
+  //   }
+  //   else atPivotSetpoint = false;
+  // }  
 }
