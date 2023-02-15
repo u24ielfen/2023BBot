@@ -4,13 +4,9 @@
 
 package frc.robot.commands;
 
-import com.ctre.phoenix.sensors.Pigeon2;
-import com.kauailabs.navx.frc.AHRS;
-
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.PIDCommand;
 import frc.robot.subsystems.Swerve;
 
 public class AlignToRamp extends CommandBase {
@@ -24,8 +20,6 @@ public class AlignToRamp extends CommandBase {
     addRequirements(s_Swerve);
     // Use addRequirements() here to declare subsystem dependencies.
   }
-
-
 
   // Called when the command is initially scheduled.
   @Override

@@ -27,12 +27,15 @@ import frc.robot.commands.AlignToRamp;
 import frc.robot.commands.AlignWithNode;
 import frc.robot.commands.MoveToTag;
 import frc.robot.commands.TeleopSwerve;
+// import frc.robot.commands.Elevator.intakeCommand;
+import frc.robot.commands.Elevator.winchCommand;
 // import frc.robot.commands.autos.exampleAuto;
 // import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.TelescopicArm;
 import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.poseEstimator;
+// import frc.robot.subsystems.poseEstimator;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -42,18 +45,23 @@ import frc.robot.subsystems.poseEstimator;
  */
 public class RobotContainer {
   private final XboxController driver = new XboxController(1);
+  private final XboxController copilot = new XboxController(3);
   
   private final PhotonCamera camera = new PhotonCamera("cam");
   private final Swerve s_Swerve = new Swerve();
-  private final poseEstimator estimator = new poseEstimator(camera, s_Swerve);
+  // private final poseEstimator estimator = new poseEstimator(camera, s_Swerve);
 
-  private final MoveToTag moveTo = new MoveToTag(camera, s_Swerve, estimator::getCurrentPose);
+  // private final MoveToTag moveTo = new MoveToTag(camera, s_Swerve, estimator::getCurrentPose);
 
   // private final exampleAuto auto = new exampleAuto(s_Swerve);
   private final AlignToRamp alignToRamp = new AlignToRamp(s_Swerve);
   private final Limelight limelight = new Limelight();
   private final AlignWithNode alignNode = new AlignWithNode(limelight, s_Swerve);
   private final Vision m_Vision = new Vision(camera);
+  // private final Intake m_intake = new Intake();
+  // private final intakeCommand c_MoveIntake = new intakeCommand(null);
+  private final TelescopicArm m_arm = new TelescopicArm();
+  private final winchCommand c_WinchCommand = new winchCommand(m_arm);
   
   public RobotContainer() {
 
@@ -64,10 +72,16 @@ public class RobotContainer {
 
   private void configureBindings() {
     
-    new Trigger(driver::getAButton).onTrue(runOnce(estimator::resetFieldPosition));
-
+    //pilot controls
+    // new Trigger(driver::getAButton).onTrue(runOnce(estimator::resetFieldPosition));
     new Trigger(driver::getRightBumper).whileTrue(alignToRamp);
-    new Trigger(driver::getLeftBumper).whileTrue(alignNode);
+    // new Trigger(driver::getRightBumper).whileTrue(alignNode);
+
+    //copilot controls
+    // new Trigger(copilot::getLeftBumper).onTrue(runOnce(c_MoveIntake::openIntake));
+    // new Trigger(copilot::getRightBumper).onTrue(runOnce(c_MoveIntake::closeIntake));
+    new Trigger(copilot::getAButton).onTrue(runOnce(m_arm::zeroWinch));
+    //test controls
   }
 
   public Command getAutonomousCommand() {

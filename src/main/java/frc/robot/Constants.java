@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
@@ -151,6 +152,10 @@ public final class Constants {
             public static final SwerveModuleConstants constants = 
             new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
+        public void moveByChassisSpeeds(ChassisSpeeds speeds) {
+        }
+        public void stop() {
+        }
         
 
     }
@@ -179,12 +184,12 @@ public final class Constants {
 
       public static final class Elevator{
 
-          public static final int PIVOT_MOTORID = 30;
-          public static final int ELEVATOR_GEARING = 100;
-          public static final int EXTENDING_MOTORID = 40;
-          public static final int PIVOT_GEARING = 100;
-          public static final double[] WINCH_PID = {1, 0, 0};
-          public static final double[] PIVOT_PID = {1, 0, 0};
+          public static final int PIVOT_MOTORID = 23;
+        //   public static final int ELEVATOR_GEARING = 100;
+          public static final int EXTENDING_MOTORID = 21;
+        //   public static final int PIVOT_GEARING = 100;
+          public static final double[] WINCH_PID = {0.01, 0, 0};
+          public static final double[] PIVOT_PID = {0.01, 0, 0};
 
           public static final double PIVOT_TICKS_TO_TOP = 100;
           public static final double PIVOT_TICKS_TO_MID = 50;
@@ -201,6 +206,7 @@ public final class Constants {
         public static final double OPEN_POSITION = 100;
         public static final double CLOSED_POSITION = 0;
         public static final double[] PID = {1, 0, 0};
+        public static final int PRESSURE_SENSOR_ID = 100;
         }
         
     public static class FieldConstants {

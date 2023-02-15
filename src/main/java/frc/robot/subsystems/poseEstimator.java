@@ -25,10 +25,10 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class poseEstimator extends SubsystemBase {
-  private final PhotonCamera photonCamera;
-  private final Swerve s_Swerve;
+  private static PhotonCamera photonCamera;
+  private static Swerve s_Swerve;
   private final AprilTagFieldLayout aprilTagFieldLayout;
-  private poseEstimator instance;
+  private static poseEstimator instance = new poseEstimator(photonCamera, s_Swerve);
   
   private static final Vector<N3> stateStdDevs = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
   
@@ -44,7 +44,6 @@ public class poseEstimator extends SubsystemBase {
   public poseEstimator(PhotonCamera photonCamera, Swerve s_Swerve) {
     this.photonCamera = photonCamera;
     this.s_Swerve = s_Swerve;
-    instance = new poseEstimator(photonCamera, s_Swerve);
     AprilTagFieldLayout layout;
     try {
       layout = AprilTagFields.k2023ChargedUp.loadAprilTagLayoutField();
@@ -68,7 +67,7 @@ public class poseEstimator extends SubsystemBase {
         this.aprilTagFieldLayout = layout;
      }
 
-  public poseEstimator getInstance(){
+  public static poseEstimator getInstance(){
     if(instance == null){
 
       return new poseEstimator(photonCamera, s_Swerve);

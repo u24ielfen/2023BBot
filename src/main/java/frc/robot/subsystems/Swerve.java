@@ -1,71 +1,42 @@
 package frc.robot.subsystems;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import javax.xml.validation.SchemaFactory;
 
-import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.kauailabs.navx.frc.AHRS.SerialDataType;
 import frc.robot.Constants;
-import frc.robot.Constants.AutoConstants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.apriltag.AprilTagFieldLayout.OriginPosition;
 import edu.wpi.first.math.Pair;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.SerialPort;
-import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ProfiledPIDCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 
 public class Swerve extends SubsystemBase {
     public static SwerveModule[] mSwerveMods;
     public static AHRS gyro;
     public static Field2d field2d;
     static Swerve instance = new Swerve();
-    //Odometry & Pose Estimation
-    // public SwerveDriveOdometry swerveOdometry;
-    // public static SwerveDrivePoseEstimator m_PoseEstimator;
-    // public static PhotonPoseEstimator aprilTagPoseEstimator;
-    
+    // static poseEstimator estimator = new poseEstimator(null, instance);
     public static AprilTagFieldLayout layout;
     
     public Swerve() {
-        gyro = new AHRS(Port.kMXP);
+        gyro = new AHRS(SPI.Port.kMXP);
         zeroGyro();
         field2d = new Field2d();
         mSwerveMods = new SwerveModule[] {
@@ -107,6 +78,17 @@ public class Swerve extends SubsystemBase {
             mod.resetWithController();
         }
     }
+    public void moveByChassisSpeeds(ChassisSpeeds speed){
+        SwerveModuleState[] swerveModuleStates = Constants.Swerve.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(speed, getGyro()));
+        setModuleStates(swerveModuleStates);
+
+    }
+
+    public void resetChassisPose(Pose2d pose){
+        // estimator.setCurrentPose(pose);
+
+    }
+
     public void setModuleStates(SwerveModuleState[] desiredStates) {
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredStates, Constants.Swerve.maxSpeed);
         for(SwerveModule mod : mSwerveMods){
@@ -114,15 +96,10 @@ public class Swerve extends SubsystemBase {
         }
     }    
 
-    // public Pose2d getEstimatedPose(){
-        // return m_PoseEstimator.getEstimatedPosition();
-    // }
 
-    // public void resetOdometry(Pose2d pose) {
-        // swerveOdometry.resetPosition(getGyro(), getModulePositions(), pose);
-        // m_PoseEstimator.resetPosition(getGyro(), getModulePositions(), pose);
-    // }
-
+    public boolean isAtState(){
+        return false;
+    }
     public SwerveModuleState[] getStates(){
         SwerveModuleState[] states = new SwerveModuleState[4];
         for(SwerveModule mod : mSwerveMods){
