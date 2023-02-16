@@ -51,7 +51,7 @@ public class TelescopicArm extends SubsystemBase {
   public TelescopicArm() {
     winchPos = winchPosition.CLOSED;
     //Extend Motor Setup
-    winchMotor.setInverted(false);
+    winchMotor.setInverted(true);
     winchMotor.restoreFactoryDefaults();
     winchMotor.setSmartCurrentLimit(60);
     winchMotor.setIdleMode(IdleMode.kBrake);

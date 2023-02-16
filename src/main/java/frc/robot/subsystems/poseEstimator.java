@@ -28,7 +28,7 @@ public class poseEstimator extends SubsystemBase {
   private static PhotonCamera photonCamera;
   private static Swerve s_Swerve;
   private final AprilTagFieldLayout aprilTagFieldLayout;
-  private static poseEstimator instance = new poseEstimator(photonCamera, s_Swerve);
+  private static poseEstimator instance;
   
   private static final Vector<N3> stateStdDevs = VecBuilder.fill(0.05, 0.05, Units.degreesToRadians(5));
   
@@ -69,7 +69,6 @@ public class poseEstimator extends SubsystemBase {
 
   public static poseEstimator getInstance(){
     if(instance == null){
-
       return new poseEstimator(photonCamera, s_Swerve);
     }
     else return instance;
@@ -121,7 +120,6 @@ public class poseEstimator extends SubsystemBase {
 
   public void resetChassisPose(){
     s_Swerve.zeroGyro();
-
   }
 
   public void resetFieldPosition() {

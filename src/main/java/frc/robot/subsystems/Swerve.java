@@ -151,11 +151,12 @@ public class Swerve extends SubsystemBase {
         return mSwerveMods;
     }
 
-    public void stop(){
-        SwerveModuleState[] stop  = new SwerveModuleState[4];
-        
+    public AHRS getAhrs(){
+        return gyro;
+    }
+    public void stop(){        
         for(SwerveModule mod : mSwerveMods){
-            mod.setDesiredState(stop[mod.moduleNumber]);
+            mod.stop();
         }
     }
     
@@ -181,6 +182,17 @@ public static Swerve getInstance(){
         return new Swerve();
     }
     return instance;
+}
+
+public void moveByChassisSpeeds(double forwardSpeed, double leftwardSpeed, double angSpeed, double currentAng) {
+    ChassisSpeeds chassisSpeeds = ChassisSpeeds.fromFieldRelativeSpeeds(
+            forwardSpeed,
+            leftwardSpeed,
+            angSpeed,
+            Rotation2d.fromDegrees(Math.toDegrees(currentAng)));
+    SwerveModuleState[] states = Constants.Swerve.kinematics.toSwerveModuleStates(chassisSpeeds);
+    SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.Swerve.maxSpeed);
+    setModuleStates(states);
 }
 
 }

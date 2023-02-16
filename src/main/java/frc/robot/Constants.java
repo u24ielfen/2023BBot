@@ -191,13 +191,22 @@ public final class Constants {
           public static final double[] WINCH_PID = {0.01, 0, 0};
           public static final double[] PIVOT_PID = {0.01, 0, 0};
 
+          //TODO: Find this value
           public static final double PIVOT_TICKS_TO_TOP = 100;
+
+          //TODO: Find this value
           public static final double PIVOT_TICKS_TO_MID = 50;
+          
+          //TODO: Find this value
           public static final double PIVOT_TICKS_TO_BOTTOM = 20;
 
-          public static final double WINCH_TICKS_TO_TOP = 100;
-          public static final double WINCH_TICKS_TO_MID = 50;
-          public static final double WINCH_TICKS_TO_BOTTOM = 20;
+          public static final double WINCH_TICKS_TO_TOP = 280;
+
+          //TODO: Find this value
+          public static final double WINCH_TICKS_TO_MID = 100;
+
+          //TODO: Find this value
+          public static final double WINCH_TICKS_TO_BOTTOM = 30;
 
         }
 

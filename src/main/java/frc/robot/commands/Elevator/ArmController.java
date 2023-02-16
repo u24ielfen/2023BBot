@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 public class ArmController extends CommandBase {
   /** Creates a new ArmController. */
@@ -26,12 +27,13 @@ public class ArmController extends CommandBase {
     isAtPosition = false;
   }
 
+  //TODO: ADD INTAKE COMMANDS
   public Command setArmToBottom(){
      return new SequentialCommandGroup(new InstantCommand(c_PivotCommand::pivotToBottom), new InstantCommand(c_WinchCommand::winchToBottom));
   }
 
   public Command setArmToMiddle(){
-    return new SequentialCommandGroup(new InstantCommand(c_PivotCommand::pivotToMiddle), new InstantCommand(c_WinchCommand::winchToMiddle));
+    return new SequentialCommandGroup(new InstantCommand(c_PivotCommand::pivotToMiddle), new InstantCommand(c_WinchCommand::winchToMiddle), new WaitCommand(1));
   }
 
   public Command setArmToTop(){
