@@ -1,8 +1,7 @@
 package frc.robot.commands;
 
 import frc.robot.Constants;
-import frc.robot.subsystems.Swerve;
-import edu.wpi.first.wpilibj.Joystick;
+import frc.robot.subsystems.Swerve.Swerve;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -39,7 +38,7 @@ public class TeleopSwerve extends CommandBase {
             SmartDashboard.putBoolean("FieldRelative", false);
         }
         double yAxis = -controller.getLeftY();
-        double xAxis = controller.getLeftX();
+        double xAxis = -controller.getLeftX();
         double rAxis = -controller.getRightX();
         
         yAxis = Math.copySign(yAxis*yAxis, yAxis);

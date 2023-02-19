@@ -1,6 +1,5 @@
 package frc.robot.commands;
 
-import java.lang.constant.Constable;
 import java.util.function.Supplier;
 
 import org.photonvision.PhotonCamera;
@@ -13,41 +12,51 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
-import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.Swerve.Swerve;
 
-public class MoveToTag extends CommandBase {
+public class MoveToPose extends CommandBase {
   
   private static final TrapezoidProfile.Constraints X_CONSTRAINTS = new TrapezoidProfile.Constraints(3, 2);
   private static final TrapezoidProfile.Constraints Y_CONSTRAINTS = new TrapezoidProfile.Constraints(3, 2);
   private static final TrapezoidProfile.Constraints OMEGA_CONSTRAINTS =   new TrapezoidProfile.Constraints(8, 8);
   
   private static final int TAG_TO_CHASE = 2;
-  private static final Transform3d TAG_TO_GOAL = 
-      new Transform3d(
-          new Translation3d(1.5, 0.0, 0.0),
-          new Rotation3d(0.0, 0.0, Math.PI));
+  private static Transform3d TAG_TO_GOAL;
+
+  boolean finished = false;
 
   private static final Transform3d CONE_TO_GOAL = new Transform3d(new Translation3d(1.5, 0, 0), new Rotation3d());
   private static final Transform3d CUBE_TO_GOAL = new Transform3d(new Translation3d(1.5, 0, 0), new Rotation3d());
-  private final PhotonCamera photonCamera;
-  private final Swerve s_Swerve;
-  private final Supplier<Pose2d> poseProvider;
+  private static PhotonCamera photonCamera;
+  private static Swerve s_Swerve;
+  private static Supplier<Pose2d> poseProvider;
 
   private final ProfiledPIDController xController = new ProfiledPIDController(3, 0, 0, X_CONSTRAINTS);
   private final ProfiledPIDController yController = new ProfiledPIDController(3, 0, 0, Y_CONSTRAINTS);
   private final ProfiledPIDController omegaController = new ProfiledPIDController(2, 0, 0, OMEGA_CONSTRAINTS);
 
+  static MoveToPose instance;
+  
   private PhotonTrackedTarget lastTarget;
 
-  public MoveToTag(
+  enum dropOffPoint{
+    TO_LEFT,
+    TO_CENTER,
+    TO_RIGHT
+  }
+
+
+  Pose2d goalPose;
+
+  public MoveToPose(
         PhotonCamera photonCamera, 
         Swerve s_Swerve,
         Supplier<Pose2d> poseProvider) {
+          
     this.photonCamera = photonCamera;
     this.s_Swerve = s_Swerve;
     this.poseProvider = poseProvider;
@@ -79,76 +88,9 @@ public class MoveToTag extends CommandBase {
             0.0, 
             new Rotation3d(0.0, 0.0, robotPose2d.getRotation().getRadians()));
     
-    var photonRes = photonCamera.getLatestResult();
-    if (photonRes.hasTargets()) {
-      if(photonCamera.getPipelineIndex() == Constants.VisionConstants.aprilTagPipeline){
-
-        var targetOpt = photonRes.getTargets().stream()
-        .filter(t -> t.getFiducialId() == TAG_TO_CHASE)
-        .filter(t -> !t.equals(lastTarget) && t.getPoseAmbiguity() <= .2 && t.getPoseAmbiguity() != -1)
-        .findFirst();
-        if (targetOpt.isPresent()) {
-          var target = targetOpt.get();
-          lastTarget = target;
-          
-          var cameraPose = robotPose.transformBy(Constants.APRILTAG_CAMERA_TO_ROBOT);
-          
-          var camToTarget = target.getBestCameraToTarget();
-          var targetPose = cameraPose.transformBy(camToTarget);
-          
-          var goalPose = targetPose.transformBy(TAG_TO_GOAL).toPose2d();
-          
           xController.setGoal(goalPose.getX());
           yController.setGoal(goalPose.getY());
           omegaController.setGoal(goalPose.getRotation().getRadians());
-        }
-      }
-      else if(photonCamera.getPipelineIndex() == Constants.VisionConstants.conePipeline){
-
-        var targetOpt = photonRes.getTargets().stream().findFirst();
-        // .filter(t -> t.getFiducialId() == TAG_TO_CHASE)
-        // .filter(t -> !t.equals(lastTarget) && t.getPoseAmbiguity() <= .2 && t.getPoseAmbiguity() != -1)
-        // .findFirst();
-        if (targetOpt.isPresent()) {
-          var target = targetOpt.get();
-          lastTarget = target;
-          
-          var cameraPose = robotPose.transformBy(Constants.CONE_CUBE_CAMERA_TO_ROBOT);
-          
-          var camToTarget = target.getBestCameraToTarget();
-          var targetPose = cameraPose.transformBy(camToTarget);
-          
-          var goalPose = targetPose.transformBy(CONE_TO_GOAL).toPose2d();
-          
-          xController.setGoal(goalPose.getX());
-          yController.setGoal(goalPose.getY());
-          omegaController.setGoal(goalPose.getRotation().getRadians());
-        }
-      }
-        else if(photonCamera.getPipelineIndex() == Constants.VisionConstants.cubePipeline){
-
-          var targetOpt = photonRes.getTargets().stream().findFirst();
-          // .filter(t -> t.getFiducialId() == TAG_TO_CHASE)
-          // .filter(t -> !t.equals(lastTarget) && t.getPoseAmbiguity() <= .2 && t.getPoseAmbiguity() != -1)
-          // .findFirst();
-          if (targetOpt.isPresent()) {
-            var target = targetOpt.get();
-            lastTarget = target;
-            
-            var cameraPose = robotPose.transformBy(Constants.CONE_CUBE_CAMERA_TO_ROBOT);
-            
-            var camToTarget = target.getBestCameraToTarget();
-            var targetPose = cameraPose.transformBy(camToTarget);
-            
-            var goalPose = targetPose.transformBy(CUBE_TO_GOAL).toPose2d();
-            
-            xController.setGoal(goalPose.getX());
-            yController.setGoal(goalPose.getY());
-            omegaController.setGoal(goalPose.getRotation().getRadians());
-        }
-      }
-    }
-    
     if (lastTarget == null) {
       s_Swerve.stop();
     } else {
@@ -173,9 +115,20 @@ public class MoveToTag extends CommandBase {
     }
   }
 
+  public static MoveToPose getInstance(){
+    if(instance == null){
+      return new MoveToPose(photonCamera, s_Swerve, poseProvider);
+    }
+    return instance;
+  }
+
   @Override
   public void end(boolean interrupted) {
     s_Swerve.stop();
+  }
+
+  public boolean isFinished(){
+    return omegaController.atGoal() && yController.atGoal() && xController.atGoal();
   }
 
 }

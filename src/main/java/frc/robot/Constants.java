@@ -183,6 +183,8 @@ public final class Constants {
       }
 
       public static final class Elevator{
+        public static final int MAX_WINCH_POSITION = 282;
+        public static final int MIN_WINCH_POSITION = 0;
 
           public static final int PIVOT_MOTORID = 23;
         //   public static final int ELEVATOR_GEARING = 100;
@@ -190,32 +192,32 @@ public final class Constants {
         //   public static final int PIVOT_GEARING = 100;
           public static final double[] WINCH_PID = {0.01, 0, 0};
           public static final double[] PIVOT_PID = {0.01, 0, 0};
-
-          //TODO: Find this value
-          public static final double PIVOT_TICKS_TO_TOP = 100;
-
-          //TODO: Find this value
-          public static final double PIVOT_TICKS_TO_MID = 50;
           
-          //TODO: Find this value
+        //PIVOT
+          public static final double PIVOT_TICKS_TO_TOP = 100;
+          public static final double PIVOT_TICKS_TO_MID = 63;
           public static final double PIVOT_TICKS_TO_BOTTOM = 20;
+          
+          //PIVOT INVERTED
+          public static final double PIVOT_TICKS_TO_BOTTOM_INVERTED = 20;
+          public static final double PIVOT_TICKS_TO_MID_INVERTED = 20;
+          public static final double PIVOT_TICKS_TO_TOP_INVERTED = 20;
 
+        //WINCH
           public static final double WINCH_TICKS_TO_TOP = 280;
-
-          //TODO: Find this value
-          public static final double WINCH_TICKS_TO_MID = 100;
-
-          //TODO: Find this value
+          public static final double WINCH_TICKS_TO_MID = 160;
           public static final double WINCH_TICKS_TO_BOTTOM = 30;
 
         }
 
       public static final class Intake{
-        public static final int MOTORID = 20;
+        public static final int MOTORID = 28;
         public static final double OPEN_POSITION = 100;
         public static final double CLOSED_POSITION = 0;
         public static final double[] PID = {1, 0, 0};
         public static final int PRESSURE_SENSOR_ID = 100;
+        public static final int TICKS_TO_OPEN = 100;
+        public static final int TICKS_TO_CLOSE = 100;
         }
         
     public static class FieldConstants {

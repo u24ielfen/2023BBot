@@ -23,19 +23,17 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.AutoConstants;
-import frc.robot.commands.AlignToRamp;
 import frc.robot.commands.AlignWithNode;
-import frc.robot.commands.MoveToTag;
+import frc.robot.commands.BalanceOnRamp;
+import frc.robot.commands.MoveToPose;
 import frc.robot.commands.TeleopSwerve;
-// import frc.robot.commands.Elevator.intakeCommand;
-import frc.robot.commands.Elevator.winchCommand;
-// import frc.robot.commands.autos.exampleAuto;
-// import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.Limelight;
-import frc.robot.subsystems.Swerve;
-import frc.robot.subsystems.TelescopicArm;
-import frc.robot.subsystems.Vision;
-// import frc.robot.subsystems.poseEstimator;
+import frc.robot.commands.Auto.PathFollowerBuilder;
+import frc.robot.commands.Auto.autoChooser;
+import frc.robot.subsystems.Arm.TelescopicArm;
+import frc.robot.subsystems.Swerve.Swerve;
+import frc.robot.subsystems.Vision.Limelight;
+import frc.robot.subsystems.Vision.Vision;
+import frc.robot.subsystems.Vision.poseEstimator;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -49,20 +47,18 @@ public class RobotContainer {
   
   private final PhotonCamera camera = new PhotonCamera("cam");
   private final Swerve s_Swerve = new Swerve();
-  // private final poseEstimator estimator = new poseEstimator(camera, s_Swerve);
+  private final poseEstimator estimator = new poseEstimator(camera, s_Swerve);
 
   // private final MoveToTag moveTo = new MoveToTag(camera, s_Swerve, estimator::getCurrentPose);
 
   // private final exampleAuto auto = new exampleAuto(s_Swerve);
-  private final AlignToRamp alignToRamp = new AlignToRamp(s_Swerve);
+  private final BalanceOnRamp alignToRamp = new BalanceOnRamp(s_Swerve);
   private final Limelight limelight = new Limelight();
   private final AlignWithNode alignNode = new AlignWithNode(limelight, s_Swerve);
   private final Vision m_Vision = new Vision(camera);
   // private final Intake m_intake = new Intake();
   // private final intakeCommand c_MoveIntake = new intakeCommand(null);
   private final TelescopicArm m_arm = new TelescopicArm();
-  private final winchCommand c_WinchCommand = new winchCommand(m_arm);
-  
   public RobotContainer() {
 
     s_Swerve.setDefaultCommand(new TeleopSwerve(s_Swerve, driver, () -> driver.getLeftBumper()));
@@ -80,13 +76,15 @@ public class RobotContainer {
     //copilot controls
     // new Trigger(copilot::getLeftBumper).onTrue(runOnce(c_MoveIntake::openIntake));
     // new Trigger(copilot::getRightBumper).onTrue(runOnce(c_MoveIntake::closeIntake));
-    new Trigger(copilot::getAButton).onTrue(runOnce(m_arm::zeroWinch));
+    new Trigger(copilot::getAButton).onTrue(runOnce(m_arm::zeroTelescopicArm));
+    // new Trigger(copilot::getBButton).onTrue(c_WinchCommand::winchToMidBam);
+    
     //test controls
   }
 
   public Command getAutonomousCommand() {
-    
-return null;
+    String pathName = autoChooser.getInstance().getAutonomous();
+    return PathFollowerBuilder.getInstance().followPath(pathName);
     // return autoBuilder.fullAuto(testPath);
   }
 }

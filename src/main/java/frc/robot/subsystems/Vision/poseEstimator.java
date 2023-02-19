@@ -1,4 +1,4 @@
-package frc.robot.subsystems;
+package frc.robot.subsystems.Vision;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -21,8 +21,10 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.Swerve.Swerve;
 
 public class poseEstimator extends SubsystemBase {
   private static PhotonCamera photonCamera;
@@ -91,12 +93,15 @@ public class poseEstimator extends SubsystemBase {
         var visionMeasurement = camPose.transformBy(Constants.APRILTAG_CAMERA_TO_ROBOT);
         poseEstimator.addVisionMeasurement(visionMeasurement.toPose2d(), resultTimestamp);
       }
+
     }
     poseEstimator.update(
       s_Swerve.getGyro(),
       s_Swerve.getModulePositions());
 
     field2d.setRobotPose(getCurrentPose());
+    SmartDashboard.putData(field2d);
+    
   }
 
   private String getFomattedPose() {
