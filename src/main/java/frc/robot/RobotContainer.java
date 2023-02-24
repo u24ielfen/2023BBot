@@ -29,11 +29,11 @@ import frc.robot.commands.MoveToPose;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.commands.Auto.PathFollowerBuilder;
 import frc.robot.commands.Auto.autoChooser;
-import frc.robot.subsystems.Arm.TelescopicArm;
-import frc.robot.subsystems.Swerve.Swerve;
-import frc.robot.subsystems.Vision.Limelight;
-import frc.robot.subsystems.Vision.Vision;
-import frc.robot.subsystems.Vision.poseEstimator;
+import frc.robot.subsystems.Limelight;
+import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.TelescopicArm;
+import frc.robot.subsystems.Vision;
+import frc.robot.subsystems.poseEstimator;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -45,7 +45,7 @@ public class RobotContainer {
   private final XboxController driver = new XboxController(1);
   private final XboxController copilot = new XboxController(3);
   
-  private final PhotonCamera camera = new PhotonCamera("cam");
+  private final PhotonCamera camera = new PhotonCamera("CAM 1");
   private final Swerve s_Swerve = new Swerve();
   private final poseEstimator estimator = new poseEstimator(camera, s_Swerve);
 
@@ -79,7 +79,9 @@ public class RobotContainer {
     new Trigger(copilot::getAButton).onTrue(runOnce(m_arm::zeroTelescopicArm));
     // new Trigger(copilot::getBButton).onTrue(c_WinchCommand::winchToMidBam);
     
+    
     //test controls
+    
   }
 
   public Command getAutonomousCommand() {

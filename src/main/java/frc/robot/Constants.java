@@ -192,6 +192,8 @@ public final class Constants {
         //   public static final int PIVOT_GEARING = 100;
           public static final double[] WINCH_PID = {0.01, 0, 0};
           public static final double[] PIVOT_PID = {0.01, 0, 0};
+          public static final int WINCH_TOLERANCE  = 2;
+          public static final int PIVOT_TOLERANCE = 2;
           
         //PIVOT
           public static final double PIVOT_TICKS_TO_TOP = 100;
@@ -212,9 +214,10 @@ public final class Constants {
 
       public static final class Intake{
         public static final int MOTORID = 28;
-        public static final double OPEN_POSITION = 100;
-        public static final double CLOSED_POSITION = 0;
+        public static final int OPEN_POSITION = 100;
+        public static final int CLOSED_POSITION = 0;
         public static final double[] PID = {1, 0, 0};
+        public static final int INTAKE_TOLERANCE = 2;
         public static final int PRESSURE_SENSOR_ID = 100;
         public static final int TICKS_TO_OPEN = 100;
         public static final int TICKS_TO_CLOSE = 100;
@@ -279,6 +282,10 @@ public final class Constants {
           public static final int take = 1;
                 }
             }
+        public static final class coprocessor{
+            public static final String coprocessor_address = "11.0.123456";
+            public static final int coprocessor_port = 5802;
+        }
 
     }
 }

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Swerve;
+package frc.robot.subsystems;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,6 +122,12 @@ public class Swerve extends SubsystemBase {
     }
     @Override
     public void periodic(){
+        // if(SmartDashboard.getNumber("Distance", 0) > 0.5){
+        //     drive(new Translation2d(0, 0.1), 0, false);
+        // }
+        // else{
+        //     drive(new Translation2d(0, 0), 0, false);
+        // }
         SmartDashboard.putNumber("Gyro Pitch", getPitch().getDegrees());
         // field2d.setRobotPose(getEstimatedPose());
         SmartDashboard.putNumber("Gyro", getGyro().getDegrees());

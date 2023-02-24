@@ -7,45 +7,47 @@ package frc.robot.commands.Elevator;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.robot.Constants;
 import frc.robot.commands.MoveToPose;
-import frc.robot.commands.Elevator.Intake.closeIntake;
-import frc.robot.commands.Elevator.Intake.openIntake;
-import frc.robot.commands.Elevator.Pivot.pivotToMid;
-import frc.robot.commands.Elevator.Pivot.pivotToTop;
-import frc.robot.commands.Elevator.Winch.winchToBottom;
-import frc.robot.commands.Elevator.Winch.winchToMid;
-import frc.robot.commands.Elevator.Winch.winchToTop;
-import frc.robot.commands.Elevator.Pivot.pivotToBottom;
-import frc.robot.commands.Elevator.Pivot.I_pivotToMid;
-import frc.robot.commands.Elevator.Pivot.I_pivotToTop;
-import frc.robot.commands.Elevator.Pivot.I_pivotToBottom;
+import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Swerve;
+import frc.robot.subsystems.TelescopicArm;
+import frc.robot.subsystems.poseEstimator;
+import frc.robot.subsystems.poseToTag;
+
 
 public class armCommands extends CommandBase {
   /** Creates a new armCommands. */
 
+  TelescopicArm m_Arm = TelescopicArm.getInstance();
   //INTAKE:
-  closeIntake c_closeIntake = closeIntake.getInstance();
-  openIntake c_openIntake = openIntake.getInstance();
-  
+  Intake m_Intake = new Intake();
+  intakeCommand c_openIntake = new intakeCommand(Constants.Intake.OPEN_POSITION, m_Intake);
+  intakeCommand c_closeIntake = new intakeCommand(Constants.Intake.CLOSED_POSITION, m_Intake);
   //PIVOT:
-  pivotToBottom c_pivotToBottom = pivotToBottom.getInstance();
-  pivotToMid c_pivotToMid = pivotToMid.getInstance();
-  pivotToTop c_pivotToTop = pivotToTop.getInstance();
+  pivotCommand c_pivotToBottom = new pivotCommand(Constants.Elevator.PIVOT_TICKS_TO_BOTTOM, m_Arm);
+  pivotCommand c_pivotToMid = new pivotCommand(Constants.Elevator.PIVOT_TICKS_TO_MID, m_Arm);
+  pivotCommand c_pivotToTop = new pivotCommand(Constants.Elevator.PIVOT_TICKS_TO_TOP, m_Arm);
     //inveted:
-  I_pivotToBottom c_I_pivotToBottom = I_pivotToBottom.getInstance();
-  I_pivotToMid c_I_pivotToMid = I_pivotToMid.getInstance();
-  I_pivotToTop c_I_pivotToTop = I_pivotToTop.getInstance();
+  pivotCommand c_I_pivotToBottom = new pivotCommand(Constants.Elevator.PIVOT_TICKS_TO_BOTTOM_INVERTED, m_Arm);
+  pivotCommand c_I_pivotToMid = new pivotCommand(Constants.Elevator.PIVOT_TICKS_TO_MID_INVERTED, m_Arm);
+  pivotCommand c_I_pivotToTop = new pivotCommand(Constants.Elevator.PIVOT_TICKS_TO_TOP_INVERTED, m_Arm);
 
   //WINCH:
-  winchToBottom c_winchToBottom = winchToBottom.getInstance();
-  winchToMid c_winchToMid = winchToMid.getInstance();
-  winchToTop c_winchToTop = winchToTop.getInstance();
-
-  MoveToPose c_moveTo = MoveToPose.getInstance();
+  winchCommand c_winchToBottom = new winchCommand(Constants.Elevator.WINCH_TICKS_TO_BOTTOM , m_Arm);
+  winchCommand c_winchToMid = new winchCommand(Constants.Elevator.WINCH_TICKS_TO_MID ,m_Arm);
+  winchCommand c_winchToTop = new winchCommand(Constants.Elevator.WINCH_TICKS_TO_TOP ,m_Arm);
+  poseToTag s_poseToTag = poseToTag.getInstance();
+  Swerve s_Swerve = Swerve.getInstance();
+  poseEstimator estimator = poseEstimator.getInstance();
+  //Work?
+  MoveToPose c_moveTo = new MoveToPose(s_poseToTag.getPhotonCam(), s_Swerve, poseEstimator.getCurrentPose(), s_poseToTag.getPose());
 
   boolean finished = false;
 
-  public armCommands() {
+  String action;
+  public armCommands(String action) {
+    this.action = action;
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -55,7 +57,33 @@ public class armCommands extends CommandBase {
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {}
+  public void execute() {
+    switch (action) {
+      case "Arm To Top":
+        armToTop();
+        break;
+      case "Arm To Mid":
+        armToMid();
+        break;
+      case "Arm To Bottom":
+        armToBottom();
+      case "Inverted Arm To Top":
+        I_armToTop();
+        break;
+      case "Inverted Arm To Mid":
+        I_armToMid();
+        break;
+      case "Inverted Arm To Bottom":
+        I_armToBottom();
+        break;
+      case "Inverted Pick Up":
+        I_pickUpObject();
+        break;
+      case "Pick Up":
+        pickUpObject();
+        break;
+      }
+  }
 
   // Called once the command ends or is interrupted.
   @Override
@@ -90,6 +118,12 @@ public class armCommands extends CommandBase {
   public Command pickUpObject(){
     return new SequentialCommandGroup(c_moveTo.andThen());
   }
+
+  
+  public Command I_pickUpObject(){
+    return new SequentialCommandGroup(c_moveTo.andThen());
+  }
+  
 
   public void finishedTrue(){
     finished = true;

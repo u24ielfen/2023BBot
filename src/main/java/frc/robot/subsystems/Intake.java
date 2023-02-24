@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.Arm;
+package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -10,15 +10,16 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
+  DutyCycleEncoder intakeEncoder = new DutyCycleEncoder(3);
   CANSparkMax intakeMotor = new CANSparkMax(Constants.Intake.MOTORID, MotorType.kBrushless);
-
-  RelativeEncoder intakeEncoder = intakeMotor.getEncoder();
+  XboxController controller = new XboxController(3);
   PIDController intakePID = new PIDController(Constants.Intake.PID[0], Constants.Intake.PID[1], Constants.Intake.PID[2]);
   public enum state{
     OPEN,
@@ -28,19 +29,24 @@ public class Intake extends SubsystemBase {
   public Intake() {
     intakeMotor.restoreFactoryDefaults();
     intakeMotor.setInverted(false);
-    intakeMotor.setIdleMode(IdleMode.kBrake);
+    intakeMotor.setIdleMode(IdleMode.kCoast);
     intakePID.setTolerance(2);
   }
-  XboxController cocontontroller = new XboxController(4);
   @Override
   public void periodic() {
-    moveIntake(cocontontroller.getLeftY());
+    if(controller.getBButton()){
+      moveIntake(-0.08);
+    }
+    if(controller.getXButton()){
+      moveIntake(0.3);
+    }
 
     // This method will be called once per scheduler run
   }
   
   public void zeroIntake(){
-      intakeEncoder.setPosition(0);
+      // intakeEncoder.setPosition(0);
+      intakeEncoder.reset();
   }
   
   public state getState(){
@@ -56,7 +62,7 @@ public class Intake extends SubsystemBase {
   }
 
   public double getIntakeEncoder(){
-    return intakeEncoder.getPosition();
+    return intakeEncoder.getAbsolutePosition();
   }
   
   public void intakeToBam(double ticks){

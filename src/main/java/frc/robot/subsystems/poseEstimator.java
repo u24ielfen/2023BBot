@@ -1,4 +1,4 @@
-package frc.robot.subsystems.Vision;
+package frc.robot.subsystems;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.subsystems.Swerve.Swerve;
 
 public class poseEstimator extends SubsystemBase {
   private static PhotonCamera photonCamera;
@@ -37,7 +36,7 @@ public class poseEstimator extends SubsystemBase {
   
   private static final Vector<N3> visionMeasurementStdDevs = VecBuilder.fill(0.5, 0.5, Units.degreesToRadians(10));
 
-  private final SwerveDrivePoseEstimator poseEstimator;
+  private static SwerveDrivePoseEstimator poseEstimator;
 
   private final Field2d field2d = new Field2d();
 
@@ -112,7 +111,7 @@ public class poseEstimator extends SubsystemBase {
         pose.getRotation().getDegrees());
   }
 
-  public Pose2d getCurrentPose() {
+  public static Pose2d getCurrentPose() {
     return poseEstimator.getEstimatedPosition();
   }
 

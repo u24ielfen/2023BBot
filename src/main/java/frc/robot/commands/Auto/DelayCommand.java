@@ -21,7 +21,7 @@ public class DelayCommand extends CommandBase {
   public void initialize() {
     SmartDashboard.putBoolean(action, true);
     new WaitCommand(time).schedule();
-    SmartDashboard.putString("Text From Command", action);
+    SmartDashboard.putString("Wait Command", action);
     SmartDashboard.putBoolean(action, false);
 
   }

@@ -2,9 +2,11 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.Vision.poseTo;
+package frc.robot.subsystems;
 
 import java.util.function.Supplier;
+
+import javax.swing.text.StyleContext.SmallAttributeSet;
 
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonTrackedTarget;
@@ -16,11 +18,13 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class poseToTag extends SubsystemBase {
   /** Creates a new poseToTag. */
-  Supplier<Pose2d> poseProvider;
-  PhotonCamera photonCamera;
+  static poseToTag instance;
+  static Supplier<Pose2d> poseProvider;
+  static PhotonCamera photonCamera;
   
   Transform3d TAG_TO_GOAL = new Transform3d(new Translation3d(), new Rotation3d());
   Pose2d goalPose;
@@ -58,13 +62,25 @@ public class poseToTag extends SubsystemBase {
         var targetPose = cameraPose.transformBy(camToTarget);
         goalPose = targetPose.transformBy(TAG_TO_GOAL).toPose2d();
         
+        SmartDashboard.putNumber("Distance From Tag X", goalPose.getX());
+        SmartDashboard.putNumber("Distance From Tag Y", goalPose.getY());
     // This method will be called once per scheduler run
   }
   }
   }
-  public Pose2d goalPose(){
+  public Pose2d getPose(){
     return goalPose;
     
+  }
+  public static poseToTag getInstance(){
+    if(instance == null){
+      return new poseToTag(poseProvider, photonCamera);
+    }
+    return instance;
+  }
+
+  public PhotonCamera getPhotonCam(){
+    return photonCamera;
   }
 }
     

@@ -16,7 +16,7 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.Constants;
-import frc.robot.subsystems.Swerve.Swerve;
+import frc.robot.subsystems.Swerve;
 
 public class MoveToPose extends CommandBase {
   
@@ -33,7 +33,7 @@ public class MoveToPose extends CommandBase {
   private static final Transform3d CUBE_TO_GOAL = new Transform3d(new Translation3d(1.5, 0, 0), new Rotation3d());
   private static PhotonCamera photonCamera;
   private static Swerve s_Swerve;
-  private static Supplier<Pose2d> poseProvider;
+  private static Pose2d poseProvider;
 
   private final ProfiledPIDController xController = new ProfiledPIDController(3, 0, 0, X_CONSTRAINTS);
   private final ProfiledPIDController yController = new ProfiledPIDController(3, 0, 0, Y_CONSTRAINTS);
@@ -50,12 +50,14 @@ public class MoveToPose extends CommandBase {
   }
 
 
-  Pose2d goalPose;
+  static Pose2d goalPose;
 
   public MoveToPose(
         PhotonCamera photonCamera, 
         Swerve s_Swerve,
-        Supplier<Pose2d> poseProvider) {
+        Pose2d poseProvider,
+        Pose2d goalPose) {
+    this.goalPose = goalPose;
           
     this.photonCamera = photonCamera;
     this.s_Swerve = s_Swerve;
@@ -72,7 +74,7 @@ public class MoveToPose extends CommandBase {
   @Override
   public void initialize() {
     lastTarget = null;
-    var robotPose = poseProvider.get();
+    var robotPose = poseProvider;
     omegaController.reset(robotPose.getRotation().getRadians());
     xController.reset(robotPose.getX());
     yController.reset(robotPose.getY());
@@ -80,7 +82,7 @@ public class MoveToPose extends CommandBase {
 
   @Override
   public void execute() {
-    var robotPose2d = poseProvider.get();
+    var robotPose2d = poseProvider;
     var robotPose = 
         new Pose3d(
             robotPose2d.getX(),
@@ -117,7 +119,7 @@ public class MoveToPose extends CommandBase {
 
   public static MoveToPose getInstance(){
     if(instance == null){
-      return new MoveToPose(photonCamera, s_Swerve, poseProvider);
+      return new MoveToPose(photonCamera, s_Swerve, poseProvider, goalPose);
     }
     return instance;
   }
