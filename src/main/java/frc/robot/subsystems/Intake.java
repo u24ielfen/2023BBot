@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
-  /** Creates a new Intake. */
   DutyCycleEncoder intakeEncoder = new DutyCycleEncoder(1);
   CANSparkMax spinMotor = new CANSparkMax(Constants.Intake.MOTORID, MotorType.kBrushless);
   CANSparkMax chinMotor = new CANSparkMax(Constants.Intake.CHINID, MotorType.kBrushless);

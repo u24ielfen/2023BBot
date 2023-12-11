@@ -42,10 +42,6 @@ public class autoChooser extends CommandBase {
   }
 
   public autoChooser(TelescopicArm m_arm, Intake m_intake, Swerve s_Swerve) {
-    this.m_arm = m_arm;
-    this.m_intake = m_intake;
-    double distanceToGo = SmartDashboard.getNumber("Time To Go", 2.7);
-    this.s_Swerve = s_Swerve;
     addRequirements(m_arm, m_intake, s_Swerve);
 
     manualChooser.setDefaultOption("Nothing Manual", new WaitCommand(15));

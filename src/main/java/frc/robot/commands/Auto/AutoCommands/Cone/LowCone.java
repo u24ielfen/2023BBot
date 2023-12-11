@@ -6,14 +6,8 @@ package frc.robot.commands.Auto.AutoCommands.Cone;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.Swerve;
-import frc.robot.commands.Elevator.intakeCommand;
-import frc.robot.commands.Elevator.pivotCommand;
-import frc.robot.commands.Elevator.winchCommand;
-import frc.robot.commands.Auto.AutoCommands.driveXDistance;
 import frc.robot.subsystems.TelescopicArm;
 
 public class LowCone extends CommandBase {
@@ -25,10 +19,10 @@ public class LowCone extends CommandBase {
   static Swerve s_Swerve;
   static LowCone instance;
   public LowCone(TelescopicArm m_arm, Intake m_intake, Swerve s_Swerve, double time) {
-    this.m_arm = m_arm;
-    this.s_Swerve = s_Swerve;
+    LowCone.m_arm = m_arm;
+    LowCone.s_Swerve = s_Swerve;
     this.time = time;
-    this.m_intake = m_intake;
+    LowCone.m_intake = m_intake;
 
     addRequirements(m_arm, m_intake, s_Swerve);
     // Use addRequirements() here to declare subsystem dependencies.
@@ -47,7 +41,6 @@ public class LowCone extends CommandBase {
   }
 
   public Command getCommand(){
-    //TODO: FIND VALUES
     // return new SequentialCommandGroup(new pivotCommand(0.36, m_arm).alongWith
     // (new winchCommand(180, m_arm).andThen(new intakeCommand(-10, m_intake).
     // andThen(new winchCommand(15, m_arm)).andThen(new InstantCommand(this::trueFinished)))));

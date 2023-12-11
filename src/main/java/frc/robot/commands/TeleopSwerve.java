@@ -10,8 +10,6 @@ import java.util.function.BooleanSupplier;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 
 
 public class TeleopSwerve extends CommandBase {
@@ -24,9 +22,7 @@ public class TeleopSwerve extends CommandBase {
     private XboxController controller;
     SlewRateLimiter limiter = new SlewRateLimiter(3);
     double maxSpeed = 1;
-    /**
-     * Driver control
-     */
+
     public TeleopSwerve(Swerve s_Swerve, XboxController controller, BooleanSupplier fieldRelative) {
         this.s_Swerve = s_Swerve;
         addRequirements(s_Swerve);
