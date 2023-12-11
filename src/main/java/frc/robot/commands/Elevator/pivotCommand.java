@@ -5,6 +5,7 @@
 package frc.robot.commands.Elevator;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.PIDCommand;
 import frc.robot.Constants;
@@ -16,9 +17,11 @@ public class pivotCommand extends CommandBase {
   double ticks;
   boolean isAtPosition;
   PIDController pidController = new PIDController(Constants.Elevator.PIVOT_PID[0], Constants.Elevator.PIVOT_PID[1], Constants.Elevator.PIVOT_PID[2]);
+  double maxSpeed;
 
-  public pivotCommand(double ticks, TelescopicArm m_Arm) {
+  public pivotCommand(double ticks, double maxSpeed, TelescopicArm m_Arm) {
     this.ticks = ticks;
+    this.maxSpeed = maxSpeed;
     this.m_Arm = m_Arm;
     addRequirements(m_Arm);
 
@@ -35,13 +38,8 @@ public class pivotCommand extends CommandBase {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    
-    if(Math.abs(m_Arm.getPivotEncoder() - ticks) < 5){
-      isAtPosition = true;
-    }
-    else{
-      m_Arm.pivotToBam(ticks);
-    }
+    SmartDashboard.putBoolean("PIVOT RUNNING", true);
+      m_Arm.pivotToBam(ticks, maxSpeed);
 
     //WITH PID:
     // m_Arm.movePivot(pidController.calculate(m_Arm.getPivotEncoder()));
@@ -56,7 +54,8 @@ public class pivotCommand extends CommandBase {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return isAtPosition;
+    SmartDashboard.putBoolean("PIVOT RUNNING", false);
+    return Math.abs(m_Arm.getPivotEncoder() - ticks) < 0.001;
     //WITH PID
     //return pidController.atSetpoint();
   }

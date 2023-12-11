@@ -84,9 +84,11 @@ public final class Constants {
         public static final double driveKF = 0.0;
 
         /* Drive Motor Characterization Values */
-        public static final double driveKS = (0.667 / 12); //divide by 12 to convert from volts to percent output for CTRE
-        public static final double driveKV = (2.44 / 12);
-        public static final double driveKA = (0.27 / 12);
+        public static final double driveKS = 0.667/12;
+        // (0.667 / 12); //divide by 12 to convert from volts to percent output for CTRE
+        public static final double driveKV = 2.44/12;
+        //  (2.44 / 12);
+        public static final double driveKA = 0.27/12; //(0.27 / 12);
 
         /* Swerve Profiling Values */
         public static final double maxRobotSpeed = 1; //meters per second
@@ -129,7 +131,7 @@ public final class Constants {
             public static final int driveMotorID = 2;
             public static final int angleMotorID = 1;
             public static final int canCoderID = 3;
-            public static final double angleOffset = -9.6679;
+            public static final double angleOffset = 6;
             public static final SwerveModuleConstants constants = 
             new SwerveModuleConstants(driveMotorID, angleMotorID, canCoderID, angleOffset);
         }
@@ -183,6 +185,7 @@ public final class Constants {
       }
 
       public static final class Elevator{
+        public static final double startingPose_Pivot = 0.867;
         public static final int MAX_WINCH_POSITION = 282;
         public static final int MIN_WINCH_POSITION = 0;
 
@@ -195,6 +198,8 @@ public final class Constants {
           public static final int WINCH_TOLERANCE  = 2;
           public static final int PIVOT_TOLERANCE = 2;
           
+          public static final double PIVOT_PICK_UP = 0.132;
+          public static final double PIVOT_PICK_UP_MOTOR = -0.468;
         //PIVOT
           public static final double PIVOT_TICKS_TO_TOP = 100;
           public static final double PIVOT_TICKS_TO_MID = 63;
@@ -210,12 +215,22 @@ public final class Constants {
           public static final double WINCH_TICKS_TO_MID = 160;
           public static final double WINCH_TICKS_TO_BOTTOM = 30;
 
+          public static final double MAX_EXTENSION_CONSTANT = 100;
+          public static final double PARTWAY_SIDE1 = 45;
+          public static final double PARTWAY_SIDE2 = 45;
+
+          public static final double ELEVATOR_MAX_ANGLE = 10;
+
+          public static final double ELEVATOR_MIN_ANGLE = 10;
+
         }
 
       public static final class Intake{
-        public static final int MOTORID = 28;
-        public static final int OPEN_POSITION = 100;
-        public static final int CLOSED_POSITION = 0;
+        public static final int MOTORID = 29;
+        public static final int CHINID = 28;
+        public static final int OPEN_POSITION = 0;
+        public static final double CONE_CLOSED_POSITION = 15.2;
+        public static final double CUBE_CLOSED_POSITION = 10.6;
         public static final double[] PID = {1, 0, 0};
         public static final int INTAKE_TOLERANCE = 2;
         public static final int PRESSURE_SENSOR_ID = 100;
@@ -235,7 +250,7 @@ public final class Constants {
         
         public static final Transform3d APRILTAG_CAM_POS = new Transform3d(new Translation3d(0.27, 0.13, 0),
         new Rotation3d(0, -Math.toRadians(20), 0)); // TODO OPI pos
-        public static final PhotonCamera APRILTAG_CAM = new PhotonCamera("cam");
+        public static final PhotonCamera APRILTAG_CAM = new PhotonCamera("CAM 1");
         public static final PoseStrategy APRILTAG_POSE_STRATEGY = PoseStrategy.LOWEST_AMBIGUITY;
         /*
         * Increase numbers to trust your model's state estimates less. This matrix is in the form [x, y, theta]ᵀ, with units in
@@ -287,5 +302,9 @@ public final class Constants {
             public static final int coprocessor_port = 5802;
         }
 
+    }
+    public static final class Servo{
+        public static final double ONE_SIDE_ANGLE = 10;
+        public static final double SECOND_SIDE_ANGLE = 10;
     }
 }

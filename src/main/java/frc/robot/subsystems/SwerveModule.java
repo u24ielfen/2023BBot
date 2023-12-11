@@ -53,10 +53,13 @@ public class SwerveModule {
         mAngleMotor.set(ControlMode.Position, Conversions.degreesToFalcon(angle, Constants.Swerve.angleGearRatio)); 
         lastAngle = angle;
     }
+    
 
     public void setDesiredAutoState(SwerveModuleState desiredState){
+        
         double velocity = Conversions.MPSToFalcon(desiredState.speedMetersPerSecond, Constants.Swerve.wheelCircumference, Constants.Swerve.driveGearRatio);
         mDriveMotor.set(ControlMode.Velocity, velocity, DemandType.ArbitraryFeedForward, feedforward.calculate(desiredState.speedMetersPerSecond));
+        
     }
     private void resetToAbsolute(){
         double absolutePosition = Conversions.degreesToFalcon(getCanCoder().getDegrees() - angleOffset, Constants.Swerve.angleGearRatio);
@@ -70,11 +73,14 @@ public class SwerveModule {
         angleEncoder.configAllSettings(Robot.ctreConfigs.swerveCanCoderConfig);
     }
 
+    public double getPositionDrive(){
+        return mDriveMotor.getSelectedSensorPosition();
+    }
     private void configAngleMotor(){
         mAngleMotor.configFactoryDefault();
         mAngleMotor.configAllSettings(Robot.ctreConfigs.swerveAngleFXConfig);
         mAngleMotor.setInverted(false);
-        mAngleMotor.setNeutralMode(NeutralMode.Coast);
+        mAngleMotor.setNeutralMode(NeutralMode.Brake);
         resetToAbsolute();
     }
 
@@ -89,11 +95,18 @@ public class SwerveModule {
         else{
             mDriveMotor.setInverted(false);
         }
-        // else{
-        //     mDriveMotor.setInverted(true);
-        // }
     }
 
+    public void changeMode(){
+        mDriveMotor.setNeutralMode(NeutralMode.Brake);
+    }
+    public void changeModeNeutral(){
+        mDriveMotor.setNeutralMode(NeutralMode.Coast);
+    }
+    
+    public void changeModeBrake(){
+        mDriveMotor.setNeutralMode(NeutralMode.Brake);
+    }
     public Rotation2d getCanCoder(){
         return Rotation2d.fromDegrees(angleEncoder.getAbsolutePosition());
     }

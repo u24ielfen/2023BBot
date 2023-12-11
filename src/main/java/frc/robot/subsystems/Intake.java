@@ -10,16 +10,27 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
 public class Intake extends SubsystemBase {
   /** Creates a new Intake. */
-  DutyCycleEncoder intakeEncoder = new DutyCycleEncoder(3);
-  CANSparkMax intakeMotor = new CANSparkMax(Constants.Intake.MOTORID, MotorType.kBrushless);
+  DutyCycleEncoder intakeEncoder = new DutyCycleEncoder(1);
+  CANSparkMax spinMotor = new CANSparkMax(Constants.Intake.MOTORID, MotorType.kBrushless);
+  CANSparkMax chinMotor = new CANSparkMax(Constants.Intake.CHINID, MotorType.kBrushless);
+  RelativeEncoder spinEncoder = spinMotor.getEncoder();
+  RelativeEncoder chinEncoder = chinMotor.getEncoder();
+  
+  DigitalInput limitSwitch = new DigitalInput(2); 
+  DigitalInput limitSwitch2 = new DigitalInput(5); 
+  
   XboxController controller = new XboxController(3);
+  static Intake instance;
+  
   PIDController intakePID = new PIDController(Constants.Intake.PID[0], Constants.Intake.PID[1], Constants.Intake.PID[2]);
   public enum state{
     OPEN,
@@ -27,56 +38,93 @@ public class Intake extends SubsystemBase {
   }
   public state currentState;
   public Intake() {
-    intakeMotor.restoreFactoryDefaults();
-    intakeMotor.setInverted(false);
-    intakeMotor.setIdleMode(IdleMode.kCoast);
-    intakePID.setTolerance(2);
+    SmartDashboard.putBoolean("Zero Chin", false);
+    spinMotor.restoreFactoryDefaults();
+    spinMotor.setInverted(true);
+    spinMotor.setIdleMode(IdleMode.kBrake);
+    chinMotor.restoreFactoryDefaults();
+    chinMotor.setInverted(false);
+    chinMotor.setIdleMode(IdleMode.kBrake);
+
+  }
+  public boolean getLimitSwitch(){
+    return limitSwitch.get() || limitSwitch2.get();
   }
   @Override
   public void periodic() {
-    if(controller.getBButton()){
-      moveIntake(-0.08);
+    if(SmartDashboard.getBoolean("Zero Chin", true)){
+      SmartDashboard.putBoolean("Zero Chin", false);
+      chinEncoder.setPosition(0);
     }
     if(controller.getXButton()){
-      moveIntake(0.3);
+      chinTicksToBam(2.33);
+    }
+    SmartDashboard.putNumber("Chin Position", chinEncoder.getPosition());
+    SmartDashboard.putBoolean("Limit Switch", limitSwitch.get());
+    SmartDashboard.putNumber("Encoder Up Top", intakeEncoder.getAbsolutePosition());
+    if(controller.getRightBumper()){
+      spinMotor.set(-0.8);
+    } else if(controller.getLeftBumper() && limitSwitch.get() == false){
+      spinMotor.set(0.8);
+    } else{
+      spinMotor.set(0);
     }
 
+    
+    if(controller.getAButton()){
+      chinMotor.set(-0.5);
+    } else if(controller.getBButton()){
+      chinMotor.set(0.5);
+    } else{
+      chinMotor.set(0);
+    }
     // This method will be called once per scheduler run
-  }
-  
-  public void zeroIntake(){
-      // intakeEncoder.setPosition(0);
-      intakeEncoder.reset();
   }
   
   public state getState(){
     return currentState;
   } 
 
-  public void stopIntakeMotor(){
-    intakeMotor.set(0);
+  public void stopSpinMotor(){
+    spinMotor.set(0);
+  }
+  public void stopChinMotor(){
+    chinMotor.set(0);
   }
   
-  public void moveIntake(double speed){
-    intakeMotor.set(speed);
+  public void chinTicksToBam(double ticks){
+    if(ticks - getChinEncoder() > 3){
+      moveChinMotor(0.5);
+    }
+    else if(ticks - getChinEncoder() > 0.2 && ticks - getChinEncoder() < 3){
+      moveChinMotor(0.1);
+    }
+    else if(ticks - getChinEncoder() < -3){
+      moveChinMotor(-0.5);
+    }
+    else if(ticks - getChinEncoder() < -0.2 && ticks - getChinEncoder() > -3){
+      moveChinMotor(-0.1);
+    }
   }
 
-  public double getIntakeEncoder(){
-    return intakeEncoder.getAbsolutePosition();
+  public void moveSpinMotor(double speed){
+      spinMotor.set(speed);
+  }
+  public void moveChinMotor(double speed){
+    chinMotor.set(speed);
+  }
+
+  public double getSpinEncoder(){
+    return spinEncoder.getPosition();
+  }
+  public double getChinEncoder(){
+    return chinEncoder.getPosition();
   }
   
-  public void intakeToBam(double ticks){
-    if(getIntakeEncoder() > ticks - 5 && getIntakeEncoder() < ticks + 5){
-      moveIntake(0);
+  public static Intake getInstance() {
+    if(instance == null){
+      return new Intake();
     }
-    else if(getIntakeEncoder() < ticks - 20){
-      moveIntake(0.8);
-    }
-    else if(getIntakeEncoder() > ticks - 20 && getIntakeEncoder() < ticks){
-      moveIntake(0.3);
-    }
-    else if(getIntakeEncoder() > ticks){
-      moveIntake(-0.8);
-    }
+    return instance;
   }
 }

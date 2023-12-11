@@ -14,16 +14,17 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Constants.Elevator;
 
 public class TelescopicArm extends SubsystemBase {
   DutyCycleEncoder pivotEncoder = new DutyCycleEncoder(0);
-  DutyCycleEncoder winchEncoder = new DutyCycleEncoder(1);
   XboxController controller = new XboxController(3);
   boolean inverted = false;
   /** Creates a new TelescopicArm. */
@@ -32,11 +33,14 @@ public class TelescopicArm extends SubsystemBase {
   CANSparkMax pivotMotor_slave = new CANSparkMax(24, MotorType.kBrushless);
   PIDController winchPidController = new PIDController(0.01, 0, 0);
   PIDController pivotPidController;
-
+  
   CANSparkMax winchMotor = new CANSparkMax(Constants.Elevator.EXTENDING_MOTORID, MotorType.kBrushless);
-
+  
+  RelativeEncoder winchEncoder = winchMotor.getEncoder();
   boolean atWinchSetpoint = false;
   boolean atPivotSetpoint = false;
+
+  
 
   boolean isInverted = false;
 
@@ -57,14 +61,14 @@ public class TelescopicArm extends SubsystemBase {
   pivotPosition pivotPos;
   
   public TelescopicArm() {
-    SmartDashboard.putBoolean("Zero Arm", false);
-    SmartDashboard.putBoolean("Arm Manual Control", false);
+    
     winchPos = winchPosition.CLOSED;
     //Extend Motor Setup
     winchMotor.setInverted(false);
     winchMotor.restoreFactoryDefaults();
     winchMotor.setSmartCurrentLimit(40);
     winchMotor.setIdleMode(IdleMode.kBrake);
+    // winchEncoder.setInverted(true);
     
     // //Pivot Motor Setup
     pivotMotor_slave.setInverted(false);
@@ -74,89 +78,127 @@ public class TelescopicArm extends SubsystemBase {
     pivotMotor.restoreFactoryDefaults();
     pivotMotor.setSmartCurrentLimit(40);
     pivotMotor.setIdleMode(IdleMode.kBrake);
+    pivotEncoder.setPositionOffset(0.16);
+    SmartDashboard.putBoolean("No Limit", false);
+
   }
   
   @Override
   public void periodic() {
-    if(SmartDashboard.getBoolean("Zero Arm", true)){
-      SmartDashboard.putBoolean("Zero Arm", false);
-      zeroTelescopicArm();
+    if(SmartDashboard.getBoolean("Zero Pivot", true)){
+      SmartDashboard.putBoolean("Zero Pivot", false);
+      zeroPivot();
     }
+  if(SmartDashboard.getBoolean("Zero Arm", true)){
+    SmartDashboard.putBoolean("Zero Arm", false);
+    zeroWinch();
+  }
+
     SmartDashboard.putNumber("winchEncoder", getWinchEncoder());
     SmartDashboard.putNumber("pivotEncoder", getPivotEncoder());
+    SmartDashboard.putNumber("ELEVATOR ANGLE", getArmAngle());
+    
+      // moveWinch(-controller.getLeftY());
       moveWinch(controller.getLeftY());
-      pivotMotor.set(controller.getRightY());
-      pivotMotor_slave.set(controller.getRightY());
+      movePivot(controller.getRightY());
   }
 
   
   public void zeroWinch(){
-    winchEncoder.reset();
+    winchEncoder.setPosition(0);
   }
   
   public void zeroPivot(){
     pivotEncoder.reset();
   }
   
-  //Functions for ease
   public void zeroTelescopicArm(){
     zeroWinch();
-    zeroPivot();
+    // zeroPivot();
   }
   public void moveWinch(double speed){
+    double pos = winchEncoder.getPosition();
+    SmartDashboard.putNumber("Winch Speed", speed);
+    // if(SmartDashboard.getBoolean("No Limit", false) == false){
+    //   winchMotor.set(speed);
+    // }
+    //  else{
+
+      //  if(speed <= 0 && pos <= -142){
+        //  speed = 0;
+        // }else if(speed >=0 && pos >= 0){
+          // speed = 0;
+        // }
+    // if(Math.abs(speed) <= 0.1){
+      // speed = 0;
+    // }
+    
     winchMotor.set(speed);
+  // } 
+    // }
+    // else if(SmartDashboard.getBoolean("No Limit", true)){
+      // winchMotor.set(speed);
+    // }
+    
   }
 
   public void movePivot(double speed){
-    if(controller.getLeftBumper()){
-      // pivotMotor.set(speed);
+    double pos  = pivotEncoder.getAbsolutePosition();
+
+    // if(speed >= 0 && pos >= 0.2 && pos <= 0.52){
+    //   speed = 0;
+    // }else if(speed <= 0  && pos >= 0.14 && pos <= 0.4){
+    //   speed = 0;
+    // }
+    if(Math.abs(speed) <= 0.1){
+      speed = 0;
     }
-    else if(!controller.getLeftBumper()){
-      if(pivotEncoder.get() > 281 || pivotEncoder.get() < 0){
-      // pivotMotor.set(0);
-    }
-      else if(pivotEncoder.get() > 275){
-      // pivotMotor.set(speed/2);
-    }
-      else{
-      // pivotMotor.set(speed);
-    }
-  }  }
+
+      pivotMotor.set(speed);
+      pivotMotor_slave.set(speed);
+  } 
 
 
-  public void winchToBam(double ticks){
-    if(getWinchEncoder() > ticks - 5 && getWinchEncoder() < ticks + 5){
-      moveWinch(0);
+  public void winchToBam(double ticks, double maxSpeed){
+    SmartDashboard.putBoolean("Winch TO", true);
+   if(getWinchEncoder() < ticks - 0.2){
+      moveWinch(maxSpeed);
     }
-    else if(getWinchEncoder() < ticks - 20){
-      moveWinch(0.8);
+    else if(getWinchEncoder() > ticks - 0.2 && getWinchEncoder() < ticks){
+      moveWinch(0.2);
     }
-    else if(getWinchEncoder() > ticks - 20 && getWinchEncoder() < ticks){
-      moveWinch(0.3);
+    else if(getWinchEncoder() > ticks + 0.2){
+      moveWinch(-maxSpeed);
     }
-    else if(getWinchEncoder() > ticks){
-      moveWinch(-0.8);
+    
+    else if(getWinchEncoder() < ticks + 0.2 && getWinchEncoder() > ticks){
+      moveWinch(-0.2);
     }
   }
   
 
-  public void pivotToBam(double ticks){
-    if(getPivotEncoder() > ticks - 5 && getPivotEncoder() < ticks + 5){
-      moveWinch(0);
+  public void pivotToBam(double ticks, double maxSpeed){
+    // SmartDashboard.putNumber("Pivot Mooving TO:", ticks);
+    if(getPivotEncoder() < ticks - 0.008){
+      movePivot(-maxSpeed);
     }
-    if(getPivotEncoder() < ticks - 5){
-      movePivot(-0.4);
+    else if(getPivotEncoder() > ticks - 0.008 && getPivotEncoder() < ticks){
+      movePivot(-0.1);
     }
-    else if(getPivotEncoder() > ticks + 5){
-      movePivot(0.4);
+    
+    else if(getPivotEncoder() > ticks + 0.008){
+      movePivot(maxSpeed);
+    }
+    else if(getPivotEncoder() < ticks + 0.008){
+      movePivot(0.1);
     }
   }
 
   public double getWinchEncoder(){
-    return winchEncoder.getAbsolutePosition();
+    return winchEncoder.getPosition();
   }
   public double getPivotEncoder(){
-    return pivotEncoder.get();
+    return pivotEncoder.getAbsolutePosition();
   }
 
 public static TelescopicArm getInstance() {
@@ -167,6 +209,12 @@ public static TelescopicArm getInstance() {
   return instance; 
 }
 
+public void movePivot180(){
+  if(getPivotEncoder() < 0.2 && getPivotEncoder() > 0.4){
+    movePivot(0.2);
+  }
+  
+}
 public void stopPivot(){
   // pivotMotor.set(0);
 }
@@ -182,5 +230,22 @@ public void toggleInverted(){
   else{ 
     inverted = true;
   }
+}
+
+public double getArmAngle(){
+  double angle = (getPivotEncoder() - Constants.Elevator.startingPose_Pivot)/(2* Math.PI);
+  return angle;
+}
+
+public double getMaxExtensions(){
+  double maxExtension = 0;
+  if(getArmAngle() < Constants.Elevator.PARTWAY_SIDE1 && getArmAngle() > Constants.Elevator.ELEVATOR_MIN_ANGLE || getArmAngle() > Constants.Elevator.PARTWAY_SIDE2 && getArmAngle() < Constants.Elevator.ELEVATOR_MAX_ANGLE){
+
+    maxExtension = Math.sin(getArmAngle()) * Constants.Elevator.MAX_EXTENSION_CONSTANT;
+  }
+  else if(getArmAngle() > Constants.Elevator.PARTWAY_SIDE1 && getArmAngle() < Constants.Elevator.PARTWAY_SIDE2){
+    maxExtension = Math.cos(getArmAngle()) * Constants.Elevator.MAX_EXTENSION_CONSTANT;
+  }
+    return maxExtension;
 }
 }

@@ -1,28 +1,21 @@
 package frc.robot.subsystems;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-
-import org.photonvision.PhotonCamera;
 
 import com.kauailabs.navx.frc.AHRS;
 import frc.robot.Constants;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.I2C.Port;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,11 +25,13 @@ public class Swerve extends SubsystemBase {
     public static SwerveModule[] mSwerveMods;
     public static AHRS gyro;
     public static Field2d field2d;
-    static Swerve instance = new Swerve();
-    // static poseEstimator estimator = new poseEstimator(null, instance);
-    public static AprilTagFieldLayout layout;
-    
-    public Swerve() {
+    static LEDs leds;
+    public double maxSpeed = 1.2;
+    double gyroThing;
+    SwerveDriveOdometry odometry;
+    SwerveDrivePoseEstimator estimator;
+
+    public Swerve(LEDs leds) {
         gyro = new AHRS(SPI.Port.kMXP);
         zeroGyro();
         field2d = new Field2d();
@@ -47,12 +42,19 @@ public class Swerve extends SubsystemBase {
             new SwerveModule(3, Constants.Swerve.Mod3.constants)
         };
         
-        List<Pair<PhotonCamera, Transform3d>> camList = new ArrayList<Pair<PhotonCamera, Transform3d>>();
-        camList.add(new Pair<PhotonCamera, Transform3d>(Constants.VisionConstants.APRILTAG_CAM, Constants.VisionConstants.APRILTAG_CAM_POS));
-        
-
+        odometry = new SwerveDriveOdometry(Constants.Swerve.kinematics, getGyro(), getModulePositions());
+        estimator = new SwerveDrivePoseEstimator(Constants.Swerve.kinematics, getGyro(), getModulePositions(),
+                getPose());
     }
 
+    public void resetEveything() {
+        gyro.reset();
+        gyro.resetDisplacement();
+    }
+
+    public void robotInit(){
+        gyroThing = gyro.getRotation2d().getDegrees();
+    }
     public void drive(Translation2d translation, double rotation, boolean fieldRelative) {
         SwerveModuleState[] swerveModuleStates =
             Constants.Swerve.kinematics.toSwerveModuleStates(
@@ -74,20 +76,9 @@ public class Swerve extends SubsystemBase {
         }
     }   
     
-    public void resetWithController(){
-        for(SwerveModule mod: mSwerveMods){
-            mod.resetWithController();
-        }
-    }
     public void moveByChassisSpeeds(ChassisSpeeds speed){
         SwerveModuleState[] swerveModuleStates = Constants.Swerve.kinematics.toSwerveModuleStates(ChassisSpeeds.fromFieldRelativeSpeeds(speed, getGyro()));
         setModuleStates(swerveModuleStates);
-
-    }
-
-    public void resetChassisPose(Pose2d pose){
-        // estimator.setCurrentPose(pose);
-
     }
 
     public void setModuleStates(SwerveModuleState[] desiredStates) {
@@ -117,20 +108,28 @@ public class Swerve extends SubsystemBase {
         return Rotation2d.fromDegrees(360- gyro.getYaw());
     }
 
+    public void resetFieldPosition(){
+        zeroGyro();
+        odometry.resetPosition(getGyro(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
+    }
+
+    public Pose2d getPose() {
+        return odometry.getPoseMeters();
+    }
     public Rotation2d getRoll(){
         return Rotation2d.fromDegrees(gyro.getRoll());
     }
+    public void resetGyro(){
+        gyro.reset();
+        gyro.resetDisplacement();
+    }
+
     @Override
     public void periodic(){
-        // if(SmartDashboard.getNumber("Distance", 0) > 0.5){
-        //     drive(new Translation2d(0, 0.1), 0, false);
-        // }
-        // else{
-        //     drive(new Translation2d(0, 0), 0, false);
-        // }
-        SmartDashboard.putNumber("Gyro Pitch", getPitch().getDegrees());
-        // field2d.setRobotPose(getEstimatedPose());
-        SmartDashboard.putNumber("Gyro", getGyro().getDegrees());
+        odometry.update(getGyro(), getModulePositions());
+        estimator.update(getGyro(), getModulePositions());
+        field2d.setRobotPose(getPose());
+
         for(SwerveModule mod : mSwerveMods){
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Cancoder", mod.getCanCoder().getDegrees());
             SmartDashboard.putNumber("Mod " + mod.moduleNumber + " Integrated", mod.getState().angle.getDegrees());
@@ -138,6 +137,8 @@ public class Swerve extends SubsystemBase {
         }
     }
 
+    public void getAMotorValue(){
+    }
     
     public SwerveModulePosition[] getModulePositions(){
         SwerveModulePosition[] positions = new SwerveModulePosition[4];
@@ -156,6 +157,14 @@ public class Swerve extends SubsystemBase {
     }
     public SwerveModule[] getModules(){
         return mSwerveMods;
+    }
+
+    public double getXGyro(){
+        return gyro.getDisplacementX();
+    }
+
+    public double getYGyro(){
+        return gyro.getDisplacementY();
     }
 
     public AHRS getAhrs(){
@@ -182,13 +191,6 @@ public Rotation2d getHeading() {
 
 public Rotation2d getYaw() {
     return null;
-}
-
-public static Swerve getInstance(){
-    if(instance == null){
-        return new Swerve();
-    }
-    return instance;
 }
 
 public void moveByChassisSpeeds(double forwardSpeed, double leftwardSpeed, double angSpeed, double currentAng) {
